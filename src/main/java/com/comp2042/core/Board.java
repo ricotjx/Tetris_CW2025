@@ -1,4 +1,7 @@
-package com.comp2042;
+package com.comp2042.core;
+
+import com.comp2042.model.ClearRow;
+import com.comp2042.model.ViewData;
 
 public interface Board {
 
