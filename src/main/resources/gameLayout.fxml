@@ -14,6 +14,31 @@
             <GridPane fx:id="gamePanel" hgap="1" vgap="1" layoutY="30" layoutX="40"/>
         </center>
     </BorderPane>
+            <!-- Main game content -->
+            <HBox spacing="30" alignment="CENTER" style="-fx-padding: 2; -fx-alignment: center;">
+
+                <!-- Left: Hold Brick -->
+                <VBox spacing="5" alignment="BOTTOM_CENTER" prefHeight="200">
+                    <Label text="HOLD" styleClass="nextBrickLabel"/>
+                    <GridPane fx:id="holdPanel"
+                              vgap="1" hgap="1"
+                              styleClass="nextBrick"/>
+                </VBox>
+
+                <!-- Center: Game Board -->
+                <VBox spacing="10" alignment="CENTER" prefHeight="200">
+                    <Label text="BOARD" styleClass="nextBrickLabel"/>
+                    <BorderPane styleClass="gameBoard">
+                        <center>
+                            <GridPane fx:id="gamePanel"
+                                      hgap="1" vgap="1"
+                                      style="-fx-background-color: #000000;"/>
+                        </center>
+                    </BorderPane>
+                </VBox>
+
+                <!-- Right: Side Panel -->
+                <VBox spacing="20" alignment="TOP_CENTER" prefHeight="200" style="-fx-padding: 5;">
 
     <Group fx:id="groupNotification" layoutX="14" layoutY="203">
         <VBox alignment="CENTER">

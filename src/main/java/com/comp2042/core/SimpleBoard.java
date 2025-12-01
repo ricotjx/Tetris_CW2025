@@ -4,6 +4,7 @@ import com.comp2042.logic.MatrixOperations;
 import com.comp2042.logic.bricks.Brick;
 import com.comp2042.logic.bricks.BrickGenerator;
 import com.comp2042.logic.bricks.RandomBrickGenerator;
+import com.comp2042.logic.MatrixOperations;
 import com.comp2042.model.BrickRotator;
 import com.comp2042.model.ClearRow;
 import com.comp2042.model.NextShapeInfo;
@@ -20,6 +21,9 @@ public class SimpleBoard implements Board {
     private int[][] currentGameMatrix;
     private Point currentOffset;
     private final Score score;
+    private Brick holdBrick = null;
+    private boolean holdUsedThisTurn = false;
+    private Brick currentBrick;
 
     public SimpleBoard(int width, int height) {
         this.width = width;
@@ -101,7 +105,59 @@ public class SimpleBoard implements Board {
 
     @Override
     public ViewData getViewData() {
-        return new ViewData(brickRotator.getCurrentShape(), (int) currentOffset.getX(), (int) currentOffset.getY(), brickGenerator.getNextBrick().getShapeMatrix().get(0));
+        int[][] holdMatrix = holdBrick != null ? holdBrick.getShapeMatrix().get(0) : null;
+        int[][] nextBrickMatrix = brickGenerator.getNextBrick().getShapeMatrix().get(0);
+
+        return new ViewData(
+                brickRotator.getCurrentShape(),
+                (int) currentOffset.x,
+                (int) currentOffset.y,
+                nextBrickMatrix,
+                holdMatrix
+        );
+    }
+
+    public int[][] getHoldBrickMatrix() {
+        return holdBrick != null ? holdBrick.getShapeMatrix().get(0) : null;
+    }
+
+    @Override
+    public void holdCurrentBrick() {
+        if (holdUsedThisTurn || currentBrick == null) {
+            return;
+        }
+
+        if (holdBrick == null) {
+            // First hold - store current and get new brick
+            holdBrick = currentBrick;
+            createNewBrick();
+        } else {
+            // Swap current with held brick
+            Brick temp = currentBrick;
+            currentBrick = holdBrick;
+            holdBrick = temp;
+
+            brickRotator.setBrick(currentBrick);
+
+            // Reset position
+            int brickWidth = brickRotator.getCurrentShape()[0].length;
+            currentOffset = new Point(width / 2 - brickWidth / 2, 0);
+        }
+
+        holdUsedThisTurn = true;
+    }
+
+    @Override
+    public void hardDrop() {
+        if (currentBrick == null) return;
+
+        while (moveBrickDown()) {
+            // Keep moving down until can't
+        }
+
+        mergeBrickToBackground();
+        clearRows();
+        createNewBrick();
     }
 
     @Override

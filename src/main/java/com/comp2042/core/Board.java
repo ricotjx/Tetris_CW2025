@@ -26,4 +26,8 @@ public interface Board {
     Score getScore();
 
     void newGame();
+
+    void holdCurrentBrick();
+
+    void hardDrop();
 }
