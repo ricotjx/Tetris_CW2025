@@ -72,4 +72,52 @@
     -fx-font-size: 38;
     -fx-fill: yellow;
     -fx-text-fill: yellow;
+
+.game-over-container {
+    -fx-background-color: rgba(0, 0, 0, 0.7);
+    -fx-alignment: center;
+    -fx-pref-width: 100%;
+    -fx-pref-height: 100%;
+}
+
+.stats-panel {
+    -fx-background-color: rgba(0, 0, 0, 0.7);
+    -fx-background-radius: 8;
+    -fx-border-color: #444444;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-padding: 5;
+}
+
+.stats-title {
+    -fx-font-family: "Let's go Digital";
+    -fx-font-size: 16px;
+    -fx-text-fill: yellow;
+}
+
+.stats-label {
+    -fx-text-fill: white;
+    -fx-font-size: 12;
+}
+
+.level-value {
+    -fx-text-fill: #44ff44;
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
+}
+
+.lines-value {
+    -fx-text-fill: #4488ff;
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
+}
+
+.combo-value {
+    -fx-text-fill: white;
+    -fx-font-size: 14;
+}
+
+.combo-active {
+    -fx-text-fill: #ffcc00;
+    -fx-font-weight: bold;
 }
