@@ -23,10 +23,17 @@ public class Main extends Application {
         GuiController c = fxmlLoader.getController();
 
         primaryStage.setTitle("TetrisJFX");
-        Scene scene = new Scene(root, 300, 510);
+
+        int boardWidth = 10 * 20;
+        int boardHeight = 20 * 20;
+        int sidePanelWidth = 350;
+        int windowHeight = boardHeight + sidePanelWidth;
+
+        Scene scene = new Scene(root, boardWidth + sidePanelWidth, windowHeight);
         primaryStage.setScene(scene);
+        primaryStage.setMinWidth(boardWidth + sidePanelWidth);
+        primaryStage.setMinHeight(windowHeight);
         primaryStage.show();
-        new GameController(c);
     }
 
 

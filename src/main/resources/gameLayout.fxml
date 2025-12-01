@@ -20,6 +20,14 @@
 
     <!-- Center: Main Game Area -->
     <center>
+        <StackPane>
+            <!-- Home Page Overlay -->
+            <StackPane fx:id="homeContainer"
+                       visible="true"
+                       styleClass="home-container">
+                <!-- HomePanel will be added programmatically by GuiController -->
+            </StackPane>
+
             <!-- Game Over Overlay -->
             <StackPane fx:id="gameOverContainer"
                        visible="false"

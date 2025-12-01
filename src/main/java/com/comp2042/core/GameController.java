@@ -21,7 +21,7 @@ public class GameController implements InputEventListener {
     public GameController(GuiController c) {
         System.out.println("=== GAME CONTROLLER CONSTRUCTOR ===");
         viewGuiController = c;
-        board.createNewBrick();
+        reset();
         viewGuiController.setEventListener(this);
         viewGuiController.bindScore(score.scoreProperty());
         viewGuiController.setOnRestartGame(this::createNewGame);

@@ -46,6 +46,8 @@ public class GuiController implements Initializable {
     private GridPane brickPanel;
 
     @FXML
+    private StackPane homeContainer;
+
     @FXML
     private StackPane gameOverContainer;
 
@@ -90,44 +92,22 @@ public class GuiController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        Font.loadFont(getClass().getClassLoader().getResource("digital.ttf").toExternalForm(), 38);
-        gamePanel.setFocusTraversable(true);
-        gamePanel.requestFocus();
-        gamePanel.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent keyEvent) {
-                if (isPause.getValue() == Boolean.FALSE && isGameOver.getValue() == Boolean.FALSE) {
-                    if (keyEvent.getCode() == KeyCode.LEFT || keyEvent.getCode() == KeyCode.A) {
-                        refreshBrick(eventListener.onLeftEvent(new MoveEvent(EventType.LEFT, EventSource.USER)));
-                        keyEvent.consume();
-                    }
-                    if (keyEvent.getCode() == KeyCode.RIGHT || keyEvent.getCode() == KeyCode.D) {
-                        refreshBrick(eventListener.onRightEvent(new MoveEvent(EventType.RIGHT, EventSource.USER)));
-                        keyEvent.consume();
-                    }
-                    if (keyEvent.getCode() == KeyCode.UP || keyEvent.getCode() == KeyCode.W) {
-                        refreshBrick(eventListener.onRotateEvent(new MoveEvent(EventType.ROTATE, EventSource.USER)));
-                        keyEvent.consume();
-                    }
-                    if (keyEvent.getCode() == KeyCode.DOWN || keyEvent.getCode() == KeyCode.S) {
-                        moveDown(new MoveEvent(EventType.DOWN, EventSource.USER));
-                        keyEvent.consume();
-                    }
-                }
-                if (keyEvent.getCode() == KeyCode.N) {
-                    newGame(null);
-                }
-            }
-        });
-        gameOverPanel.setVisible(false);
-        if (holdPanel != null) {
-            holdPanel.getChildren().clear();
+        homePanel = new HomePanel();
         gameOverPanel = new GameOverPanel();
+
+        // Add home panel to home container
+        if (homeContainer != null && homePanel != null) {
+            homeContainer.getChildren().add(homePanel);
+            StackPane.setAlignment(homePanel, Pos.CENTER);
+        }
+
         // Add game over panel to game over container
         if (gameOverContainer != null && gameOverPanel != null) {
             gameOverContainer.getChildren().add(gameOverPanel);
             StackPane.setAlignment(gameOverPanel, Pos.CENTER);
         }
+
+        setupHomePageActions();
         setupGameOverActions();
 
         try {
@@ -155,6 +135,59 @@ public class GuiController implements Initializable {
 
         initializeStatsDisplay();
 
+        // Show home page when application starts
+        showHomePage();
+    }
+
+    private void setupHomePageActions() {
+        if (homePanel != null) {
+            homePanel.getZenModeButton().setOnAction(actionEvent -> startGame("ZEN"));
+            homePanel.getTimeLimitModeButton().setOnAction(actionEvent -> startGame("TIME_LIMIT"));
+            homePanel.getLinesModeButton().setOnAction(actionEvent -> startGame("40_LINES"));
+        }
+    }
+
+    private void startGame(String gameMode) {
+        System.out.println("Starting game mode: " + gameMode);
+        hideHomePage();
+
+        // Create the GameController only when starting a game
+        if (eventListener == null) {
+            eventListener = new GameController(this);
+        }
+        newGame();
+    }
+
+    public void showHomePage() {
+        if (homeContainer != null) {
+            homeContainer.setVisible(true);
+            homeContainer.toFront();
+        }
+        if (gameOverContainer != null) {
+            gameOverContainer.setVisible(false); // Hide game over container
+        }
+
+        if (homePanel != null) {
+            homePanel.showPanel();
+        }
+
+        isHomeScreen.set(true);
+        isGameOver.set(false);
+
+        // Stop any existing game timers when showing home page
+        if (timeLine != null) {
+            timeLine.stop();
+        }
+        stopTimer();
+    }
+
+    public void hideHomePage() {
+        if (homeContainer != null) {
+            homeContainer.setVisible(false);
+        }
+        isHomeScreen.set(false);
+    }
+
     private void initializeStatsDisplay() {
         if (levelLabel != null) {
             levelLabel.setText("1");
@@ -170,6 +203,56 @@ public class GuiController implements Initializable {
         }
     }
 
+    private void setupGameOverActions() {
+        if (gameOverPanel != null) {
+            gameOverPanel.getRestartButton().setOnAction(event -> {
+                System.out.println("=== RESTART BUTTON CLICKED ===");
+                newGame();
+            });
+
+            gameOverPanel.getHomeButton().setOnAction(event -> {
+                System.out.println("=== HOME BUTTON CLICKED ===");
+                showHomePage(); // Hide game over container and show home container
+            });
+        }
+    }
+
+    public void setOnRestartGame(Runnable onRestartGame) {
+        this.onRestartGame = onRestartGame;
+    }
+
+    private void handleKeyPressed(KeyEvent keyEvent) {
+        if (eventListener == null) return;
+
+        KeyCode code = keyEvent.getCode();
+
+        // Don't process game keys when on home screen or game over/pause
+        if (isHomeScreen.get() || isGameOver.get()) {
+            return;
+        }
+
+        if (!isPause.get() && !isGameOver.get()) {
+            switch (code) {
+                case LEFT:
+                case A:
+                    refreshGameView(eventListener.onLeftEvent(new MoveEvent(EventType.LEFT, EventSource.USER)));
+                    keyEvent.consume();
+                    break;
+                case RIGHT:
+                case D:
+                    refreshGameView(eventListener.onRightEvent(new MoveEvent(EventType.RIGHT, EventSource.USER)));
+                    keyEvent.consume();
+                    break;
+                case UP:
+                case W:
+                    refreshGameView(eventListener.onRotateEvent(new MoveEvent(EventType.ROTATE, EventSource.USER)));
+                    keyEvent.consume();
+                    break;
+                case DOWN:
+                case S:
+                    moveDown(new MoveEvent(EventType.DOWN, EventSource.USER));
+                    keyEvent.consume();
+                    break;
                 case SPACE:
                     if (eventListener instanceof GameController gc) {
                         gc.hardDrop();
@@ -189,6 +272,10 @@ public class GuiController implements Initializable {
 
         if (code == KeyCode.N) {
             newGame();
+        }
+
+        if (code == KeyCode.H) {
+            showHomePage();
         }
 
         if (code == KeyCode.ESCAPE) {
@@ -591,13 +678,27 @@ public class GuiController implements Initializable {
                 );
             }
 
+            // Hide home container and show game over container
+            if (homeContainer != null) {
+                homeContainer.setVisible(false);
+            }
+
+            gameOverContainer.setVisible(true);
+            gameOverPanel.setVisible(true);
+            gameOverContainer.toFront();
+
+            // Force updates
+            gameOverPanel.applyCss();
+            gameOverPanel.layout();
+            gameOverContainer.applyCss();
+            gameOverContainer.layout();
+
+            System.out.println("=== GAME OVER PANEL SHOULD BE VISIBLE ===");
+        }
+        isGameOver.set(true);
+        isHomeScreen.set(false);
     }
 
-    public void newGame(ActionEvent actionEvent) {
-        timeLine.stop();
-        gameOverPanel.setVisible(false);
-        eventListener.createNewGame();
-        gamePanel.requestFocus();
     public void newGame() {
         System.out.println("=== STARTING NEW GAME ===");
 
@@ -613,6 +714,22 @@ public class GuiController implements Initializable {
         // Reset game states
         isGameOver.set(false);
         isPause.set(false);
+        isHomeScreen.set(false);
+
+        // Hide both containers to show the game
+        if (homeContainer != null) {
+            homeContainer.setVisible(false);
+        }
+        if (gameOverContainer != null) {
+            gameOverContainer.setVisible(false);
+        }
+
+        // Make sure game panel is visible and focused
+        if (gamePanel != null) {
+            gamePanel.setVisible(true);
+            gamePanel.requestFocus();
+        }
+
         if (eventListener == null) {
             eventListener = new GameController(this);
         } else if (eventListener instanceof GameController) {
@@ -695,5 +812,23 @@ public class GuiController implements Initializable {
             gamePanel.requestFocus();
         }
     }
+
+    public void hideGameOverPanel() {
+        if (gameOverContainer != null) {
+            gameOverContainer.setVisible(false);
+            gameOverContainer.setManaged(false);
+            gameOverContainer.toBack();
+            gameOverContainer.applyCss();
+            gameOverContainer.layout();
+        }
+        if (gameOverPanel != null) {
+            gameOverPanel.setVisible(false);
+            gameOverPanel.setManaged(false);
+            gameOverPanel.applyCss();
+            gameOverPanel.layout();
+        }
+
+        isGameOver.set(false);
+        isPause.set(false);
     }
 }
