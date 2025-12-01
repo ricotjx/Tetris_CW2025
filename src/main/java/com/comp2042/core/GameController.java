@@ -29,6 +29,11 @@ public class GameController implements InputEventListener {
 
     @Override
     public DownData onDownEvent(MoveEvent event) {
+        // Don't process game events if game hasn't started
+        if (!gameStarted || gameEnded) {
+            return null;
+        }
+
         boolean canMove = board.moveBrickDown();
         ClearRow clearRow = null;
 
@@ -57,7 +62,8 @@ public class GameController implements InputEventListener {
             }
 
             if (board.createNewBrick()) {
-                viewGuiController.gameOver();
+                onGameOver();
+                return null;
             }
 
             viewGuiController.refreshGameBackground(board.getBoardMatrix());
@@ -68,18 +74,21 @@ public class GameController implements InputEventListener {
 
     @Override
     public ViewData onLeftEvent(MoveEvent event) {
+        if (!gameStarted || gameEnded) return board.getViewData();
         board.moveBrickLeft();
         return board.getViewData();
     }
 
     @Override
     public ViewData onRightEvent(MoveEvent event) {
+        if (!gameStarted || gameEnded) return board.getViewData();
         board.moveBrickRight();
         return board.getViewData();
     }
 
     @Override
     public ViewData onRotateEvent(MoveEvent event) {
+        if (!gameStarted || gameEnded) return board.getViewData();
         board.rotateLeftBrick();
         return board.getViewData();
     }
@@ -116,6 +125,7 @@ public class GameController implements InputEventListener {
 
         boolean collisionAtSpawn = board.createNewBrick();
         if (collisionAtSpawn) {
+            onGameOver();
             return;
         }
 
@@ -146,9 +156,62 @@ public class GameController implements InputEventListener {
         return board.getViewData();
     }
 
+    public void reset() {
+        // Stop any ongoing game logic
+        stopGame();
+
+        // Create fresh instances - this is crucial!
+        this.board = new SimpleBoard(10, 20);
+        this.score = new Score(); // Fresh Score instance - this resets level to 1
+
+        // Re-bind the score to gui controller
+        viewGuiController.bindScore(score.scoreProperty());
+
+        // Reset all game state variables
+        this.hardDropDistance = 0;
+        this.isSoftDropping = false;
+        this.gameStarted = false;
+        this.gameEnded = false;
+    }
+
     @Override
     public void createNewGame() {
         board.newGame();
-        viewGuiController.refreshGameBackground(board.getBoardMatrix());
+        score.reset();
+        hardDropDistance = 0;
+        isSoftDropping = false;
+        gameStarted = true;
+        gameEnded = false;
+
+        // Initialize the game view and start first brick
+        board.createNewBrick();
+    }
+
+    public Score getScore() {
+        return score;
+    }
+
+    public int[][] getCurrentBoard() {
+        return board.getBoardMatrix();
+    }
+
+    public void onGameOver() {
+        gameEnded = true;
+        gameStarted = false;
+        int finalScore = score.scoreProperty().get();
+        viewGuiController.gameOver(finalScore);
+    }
+
+    public boolean isGameStarted() {
+        return gameStarted;
+    }
+
+    public boolean isGameEnded() {
+        return gameEnded;
+    }
+
+    public void stopGame() {
+        gameStarted = false;
+        gameEnded = true;
     }
 }

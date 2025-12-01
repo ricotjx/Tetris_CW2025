@@ -11,7 +11,6 @@ import javafx.scene.text.FontWeight;
 
 public class GameOverPanel extends VBox {
 
-public class GameOverPanel extends BorderPane {
     private final Button restartButton;
     private final Button homeButton;
     private final Label gameOverLabel;

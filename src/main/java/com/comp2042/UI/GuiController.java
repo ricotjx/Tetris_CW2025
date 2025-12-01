@@ -70,6 +70,7 @@ public class GuiController implements Initializable {
     @FXML
     private Label timerLabel;
 
+    private HomePanel homePanel;
     private GameOverPanel gameOverPanel;
     private Rectangle[][] displayMatrix;
     private InputEventListener eventListener;
@@ -80,11 +81,12 @@ public class GuiController implements Initializable {
     private long elapsedTime;
     private boolean isTimerRunning = false;
 
-    private final BooleanProperty isPause = new SimpleBooleanProperty();
     private final BooleanProperty isPause = new SimpleBooleanProperty(false);
     private final BooleanProperty isGameOver = new SimpleBooleanProperty(false);
+    private final BooleanProperty isHomeScreen = new SimpleBooleanProperty(true);
 
-    private final BooleanProperty isGameOver = new SimpleBooleanProperty();
+    private int[][] currentBoardMatrix;
+    private Runnable onRestartGame;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -183,6 +185,11 @@ public class GuiController implements Initializable {
                     keyEvent.consume();
                     break;
             }
+        }
+
+        if (code == KeyCode.N) {
+            newGame();
+        }
 
         if (code == KeyCode.ESCAPE) {
             if (isHomeScreen.get()) {
@@ -251,9 +258,9 @@ public class GuiController implements Initializable {
         startTimer();
 
         timeLine = new Timeline(new KeyFrame(
-                Duration.millis(400),
-                ae -> moveDown(new MoveEvent(EventType.DOWN, EventSource.THREAD))
-        ));
+                Duration.millis(dropSpeed()),  // Use dynamic speed based on level
+                event -> moveDown(new MoveEvent(EventType.DOWN, EventSource.THREAD)))
+        );
         timeLine.setCycleCount(Timeline.INDEFINITE);
         timeLine.play();
     }
@@ -289,7 +296,6 @@ public class GuiController implements Initializable {
                 }
             }
         }
-        return returnPaint;
     }
 
     private Paint getFillColor(int colorCode) {
@@ -502,10 +508,6 @@ public class GuiController implements Initializable {
         }
     }
 
-    public void gameOver() {
-        timeLine.stop();
-        gameOverPanel.setVisible(true);
-        isGameOver.setValue(Boolean.TRUE);
     private void updateTimerDisplay() {
         if (isTimerRunning) {
             elapsedTime = System.currentTimeMillis() - startTime;
@@ -596,13 +598,88 @@ public class GuiController implements Initializable {
         gameOverPanel.setVisible(false);
         eventListener.createNewGame();
         gamePanel.requestFocus();
+    public void newGame() {
+        System.out.println("=== STARTING NEW GAME ===");
+
+        // Stop existing game
+        if (timeLine != null) {
+            timeLine.stop();
+            timeLine = null;
+        }
+
+        stopTimer();
+        resetTimer();
+
+        // Reset game states
+        isGameOver.set(false);
+        isPause.set(false);
+        if (eventListener == null) {
+            eventListener = new GameController(this);
+        } else if (eventListener instanceof GameController) {
+            GameController gameController = (GameController) eventListener;
+
+            // CALL RESET to get fresh instances
+            gameController.reset();
+
+            // THEN create the new game
+            gameController.createNewGame();
+
+            updateStats(gameController.getScore());
+            initGameView(gameController.getCurrentBoard(), gameController.getViewData());
+        }
+
+        // Start new timer
+        startTimer();
+
+        // Use level 1 speed explicitly
+        long initialSpeed = getSpeedForLevel(1);
+
+        timeLine = new Timeline(new KeyFrame(
+                Duration.millis(initialSpeed),
+                event -> moveDown(new MoveEvent(EventType.DOWN, EventSource.THREAD))
+        ));
+        timeLine.setCycleCount(Timeline.INDEFINITE);
         timeLine.play();
-        isPause.setValue(Boolean.FALSE);
-        isGameOver.setValue(Boolean.FALSE);
+
+        if (gamePanel != null) {
+            gamePanel.requestFocus();
+        }
     }
 
-    public void pauseGame(ActionEvent actionEvent) {
-        gamePanel.requestFocus();
+    private long dropSpeed() {
+        int level = 1; // Default to level 1
+
+        if (eventListener instanceof GameController) {
+            GameController gameController = (GameController) eventListener;
+            level = gameController.getScore().getLevel();
+            // Safety check
+            level = Math.max(1, level);
+        }
+
+        return getSpeedForLevel(level);
+    }
+
+    private long getSpeedForLevel(int level) {
+        return switch (level) {
+            case 1 -> 1500;  // 1.5 seconds
+            case 2 -> 1400;  // 1.4 seconds
+            case 3 -> 1300;  // 1.3 seconds
+            case 4 -> 1200;  // 1.2 seconds
+            case 5 -> 1100;  // 1.1 seconds
+            case 6 -> 1000;  // 1.0 seconds
+            case 7 -> 950;   // 0.95 seconds
+            case 8 -> 900;   // 0.9 seconds
+            case 9 -> 850;   // 0.85 seconds
+            case 10 -> 800;  // 0.8 seconds
+            case 11 -> 750;  // 0.75 seconds
+            case 12 -> 700;  // 0.7 seconds
+            case 13 -> 650;  // 0.65 seconds
+            case 14 -> 600;  // 0.6 seconds
+            case 15 -> 550;  // 0.55 seconds
+            default -> Math.max(500, 550 - (level - 15) * 10);
+        };
+    }
+
     public void pauseGame() {
         isPause.set(!isPause.get());
         if (isPause.get()) {
