@@ -16,4 +16,8 @@ public final class DownData {
     public ViewData getViewData() {
         return viewData;
     }
+
+    public int getScoreBonus() {
+        return clearRow != null ? clearRow.getScoreBonus() : 0;
+    }
 }

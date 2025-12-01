@@ -10,18 +10,22 @@ import com.comp2042.UI.GuiController;
 
 public class GameController implements InputEventListener {
 
-    private Board board = new SimpleBoard(25, 10);
-
+    private Board board = new SimpleBoard(10, 20);
     private final GuiController viewGuiController;
+    private Score score = new Score();
     private int hardDropDistance = 0;
     private boolean isSoftDropping = false;
+    private boolean gameStarted = false;
+    private boolean gameEnded = false;
 
     public GameController(GuiController c) {
+        System.out.println("=== GAME CONTROLLER CONSTRUCTOR ===");
         viewGuiController = c;
         board.createNewBrick();
         viewGuiController.setEventListener(this);
         viewGuiController.initGameView(board.getBoardMatrix(), board.getViewData());
         viewGuiController.bindScore(board.getScore().scoreProperty());
+        viewGuiController.bindScore(score.scoreProperty());
     }
 
     @Override
@@ -44,8 +48,15 @@ public class GameController implements InputEventListener {
 
             clearRow = board.clearRows();
             if (clearRow.getLinesRemoved() > 0) {
-                board.getScore().add(clearRow.getScoreBonus());
+                handleAdvancedScoring(clearRow.getLinesRemoved());
+            } else {
+                score.piecePlacedWithoutClear();
             }
+
+            if (isPerfectClear()) {
+                score.addPerfectClear();
+            }
+
             if (board.createNewBrick()) {
                 viewGuiController.gameOver();
             }
@@ -94,12 +105,42 @@ public class GameController implements InputEventListener {
 
         board.mergeBrickToBackground();
         ClearRow clearRow = board.clearRows();
+        if (clearRow.getLinesRemoved() > 0) {
+            handleAdvancedScoring(clearRow.getLinesRemoved());
+        } else {
+            score.piecePlacedWithoutClear();
+        }
+
+        if (isPerfectClear()) {
+            score.addPerfectClear();
+        }
+
         boolean collisionAtSpawn = board.createNewBrick();
         if (collisionAtSpawn) {
             return;
         }
 
         viewGuiController.refreshGameBackground(board.getBoardMatrix());
+    }
+
+    private void handleAdvancedScoring(int linesCleared) {
+        if (linesCleared == 4) {
+            score.addTetrisScore();
+        } else {
+            score.addLineClearScore(linesCleared);
+        }
+    }
+
+    private boolean isPerfectClear() {
+        int[][] boardMatrix = board.getBoardMatrix();
+        for (int y = 0; y < boardMatrix.length; y++) {
+            for (int x = 0; x < boardMatrix[y].length; x++) {
+                if (boardMatrix[y][x] != 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     public ViewData getViewData() {

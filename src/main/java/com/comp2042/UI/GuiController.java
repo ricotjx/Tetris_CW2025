@@ -1,6 +1,7 @@
 package com.comp2042.UI;
 
 import com.comp2042.model.*;
+import com.comp2042.core.Score;
 import com.comp2042.model.events.EventSource;
 import com.comp2042.model.events.EventType;
 import com.comp2042.model.events.InputEventListener;
@@ -43,7 +44,14 @@ public class GuiController implements Initializable {
 
     @FXML
     @FXML
+    private Label scoreLabel;
+
+    @FXML
     private GridPane holdPanel;
+
+    @FXML
+    private Label levelLabel;
+
     private GameOverPanel gameOverPanel;
 
     private Rectangle[][] displayMatrix;
@@ -280,9 +288,19 @@ public class GuiController implements Initializable {
 
     public void setEventListener(InputEventListener eventListener) {
         this.eventListener = eventListener;
+        if (eventListener instanceof GameController) {
+            GameController gameController = (GameController) eventListener;
+            bindScore(gameController.getScore().scoreProperty());
+            bindScoreProperties(gameController.getScore());
+        }
     }
 
     public void bindScore(IntegerProperty integerProperty) {
+        if (scoreLabel != null && integerProperty != null) {
+            scoreLabel.textProperty().bind(integerProperty.asString());
+        }
+    }
+
     }
 
     public void gameOver() {
