@@ -72,6 +72,7 @@ public class GuiController implements Initializable {
     private HomePanel homePanel;
     private GameOverPanel gameOverPanel;
     private GameRenderer gameRenderer;
+    private InputHandler inputHandler;
     private InputEventListener eventListener;
     private Timeline timeLine;
     private GameTimer gameTimer;
@@ -88,6 +89,7 @@ public class GuiController implements Initializable {
         gameOverPanel = new GameOverPanel();
         gameRenderer = new GameRenderer(gamePanel, brickPanel, holdPanel, groupNotification,
                 scoreLabel, levelLabel, linesLabel, comboLabel, timerLabel);
+        inputHandler = new InputHandler(this);
 
         // Add home panel to home container
         if (homeContainer != null && homePanel != null) {
@@ -227,72 +229,7 @@ public class GuiController implements Initializable {
     }
 
     private void handleKeyPressed(KeyEvent keyEvent) {
-        if (eventListener == null) return;
-
-        KeyCode code = keyEvent.getCode();
-
-        // Don't process game keys when on home screen or game over/pause
-        if (isHomeScreen.get() || isGameOver.get()) {
-            return;
-        }
-
-        if (!isPause.get() && !isGameOver.get()) {
-            switch (code) {
-                case LEFT:
-                case A:
-                    refreshGameView(eventListener.onLeftEvent(new MoveEvent(EventType.LEFT, EventSource.USER)));
-                    keyEvent.consume();
-                    break;
-                case RIGHT:
-                case D:
-                    refreshGameView(eventListener.onRightEvent(new MoveEvent(EventType.RIGHT, EventSource.USER)));
-                    keyEvent.consume();
-                    break;
-                case UP:
-                case W:
-                    refreshGameView(eventListener.onRotateEvent(new MoveEvent(EventType.ROTATE, EventSource.USER)));
-                    keyEvent.consume();
-                    break;
-                case DOWN:
-                case S:
-                    moveDown(new MoveEvent(EventType.DOWN, EventSource.USER));
-                    keyEvent.consume();
-                    break;
-                case SPACE:
-                    if (eventListener instanceof GameController gc) {
-                        gc.hardDrop();
-                        refreshGameView(gc.getViewData());
-                    }
-                    keyEvent.consume();
-                    break;
-                case C:
-                    ViewData holdView = eventListener.onHoldEvent(new MoveEvent(EventType.HOLD, EventSource.USER));
-                    if (holdView != null) {
-                        refreshGameView(holdView);
-                    }
-                    keyEvent.consume();
-                    break;
-            }
-        }
-
-        if (code == KeyCode.N) {
-            newGame();
-        }
-
-        if (code == KeyCode.H) {
-            showHomePage();
-        }
-
-        if (code == KeyCode.ESCAPE) {
-            if (isHomeScreen.get()) {
-                return;
-            }
-            pauseGame();
-        }
-    }
-
-    private void updateHoldBrickPreview(int[][] holdBrick) {
-        gameRenderer.updateHoldBrickPreview(holdBrick);
+        inputHandler.handleKeyPressed(keyEvent, isHomeScreen.get(), isGameOver.get(), isPause.get());
     }
 
     public void initGameView(int[][] boardMatrix, ViewData viewData) {
@@ -309,19 +246,16 @@ public class GuiController implements Initializable {
         timeLine.play();
     }
 
-    private void refreshGameView(ViewData viewData) {
+    public void refreshGameView(ViewData viewData) {
         gameRenderer.refreshGameView(viewData);
-    }
-
-    private void drawFallingBrick(ViewData viewData) {
-        // This is now handled by GameRenderer
     }
 
     public void refreshGameBackground(int[][] board) {
         gameRenderer.refreshGameBackground(board);
     }
 
-    private boolean moveDown(MoveEvent event) {
+    // This method needs to be public for InputHandler to call it
+    public boolean moveDown(MoveEvent event) {
         if (eventListener == null || isPause.get()) return false;
 
         DownData downData = eventListener.onDownEvent(event);
@@ -370,6 +304,7 @@ public class GuiController implements Initializable {
 
     public void setEventListener(InputEventListener eventListener) {
         this.eventListener = eventListener;
+        inputHandler.setEventListener(eventListener);
         if (eventListener instanceof GameController) {
             GameController gameController = (GameController) eventListener;
             bindScore(gameController.getScore().scoreProperty());
