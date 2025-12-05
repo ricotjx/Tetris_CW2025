@@ -74,6 +74,7 @@ public class GuiController implements Initializable {
     private InputEventListener eventListener;
     private Timeline timeLine;
     private GameTimer gameTimer;
+    private String currentGameMode = "ZEN";
 
     private Runnable onRestartGame;
 
@@ -160,6 +161,9 @@ public class GuiController implements Initializable {
     private void startGame(String gameMode) {
         System.out.println("Starting game mode: " + gameMode);
         hideHomePage();
+
+        // Store the selected mode
+        this.currentGameMode = gameMode;
 
         newGame();
     }
@@ -527,6 +531,19 @@ public class GuiController implements Initializable {
 
         if (eventListener instanceof GameController gameController) {
             System.out.println("GameController created, calling createNewGame()...");
+            if ("40_LINES".equals(currentGameMode)) {
+                gameController.set40LinesMode(true);
+                System.out.println("✓ 40 Lines mode ACTIVATED");
+            } else if ("TIME_LIMIT".equals(currentGameMode)) {
+                // For future time limit mode
+                gameController.set40LinesMode(false);
+                System.out.println("✓ Time Limit mode (not implemented yet)");
+            } else {
+                gameController.set40LinesMode(false);
+                System.out.println("✓ Zen mode ACTIVATED");
+            }
+
+            System.out.println("Calling createNewGame()...");
             gameStateManager.setGameController(gameController);
             gameController.createNewGame();  // This sets gameStarted = true
 

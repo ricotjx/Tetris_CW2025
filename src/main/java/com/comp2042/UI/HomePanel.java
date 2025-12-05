@@ -50,7 +50,7 @@ public class HomePanel extends VBox {
 
         // Time Limit Mode Button
         timeLimitModeButton = createModeButton("TIME LIMIT",
-                "Race against the clock (2 minutes)",
+                "Clear as many lines in 2 minutes",
                 "-fx-background-color: linear-gradient(to bottom, #2196F3, #0D47A1);");
 
         // 40 Lines Mode Button

@@ -17,6 +17,8 @@ public class GameController implements InputEventListener {
     private boolean isSoftDropping = false;
     private boolean gameStarted = false;
     private boolean gameEnded = false;
+    private boolean is40LinesMode = false;
+    private int linesClearedInMode = 0;
 
     public GameController(GuiController c) {
         System.out.println("=== GAME CONTROLLER CONSTRUCTOR ===");
@@ -34,6 +36,8 @@ public class GameController implements InputEventListener {
         this.isSoftDropping = false;
         this.gameStarted = false;
         this.gameEnded = false;
+        this.is40LinesMode = false;
+        this.linesClearedInMode = 0;
     }
 
     @Override
@@ -62,6 +66,19 @@ public class GameController implements InputEventListener {
             clearRow = board.clearRows();
             if (clearRow.getLinesRemoved() > 0) {
                 handleAdvancedScoring(clearRow.getLinesRemoved());
+
+                // Track lines for 40 lines mode
+                if (is40LinesMode) {
+                    linesClearedInMode += clearRow.getLinesRemoved();
+                    System.out.println("40 Lines mode: " + linesClearedInMode + "/40 lines cleared");
+
+                    // Check if 40 lines reached
+                    if (linesClearedInMode >= 40) {
+                        System.out.println("40 LINES COMPLETED!");
+                        onGameOver();
+                        return null;
+                    }
+                }
             } else {
                 score.piecePlacedWithoutClear();
             }
@@ -147,6 +164,18 @@ public class GameController implements InputEventListener {
         } else {
             score.addLineClearScore(linesCleared);
         }
+
+        // Track lines for 40 lines mode
+        if (is40LinesMode) {
+            linesClearedInMode += linesCleared;
+            System.out.println("📊 40 Lines mode progress: " + linesClearedInMode + "/40 lines cleared");
+
+            // Check if 40 lines reached
+            if (linesClearedInMode >= 40) {
+                System.out.println("🎉🎉🎉 40 LINES COMPLETED! Calling onGameOver()...");
+                onGameOver();
+            }
+        }
     }
 
     private boolean isPerfectClear() {
@@ -225,5 +254,17 @@ public class GameController implements InputEventListener {
     public void stopGame() {
         gameStarted = false;
         gameEnded = true;
+    }
+
+    // Set 40 lines mode
+    public void set40LinesMode(boolean enabled) {
+        this.is40LinesMode = enabled;
+        this.linesClearedInMode = 0;
+        System.out.println("40 Lines mode set to: " + enabled);
+    }
+
+    // Get current mode
+    public boolean is40LinesMode() {
+        return is40LinesMode;
     }
 }
