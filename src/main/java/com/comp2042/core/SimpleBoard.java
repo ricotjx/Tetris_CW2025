@@ -19,7 +19,6 @@ public class SimpleBoard implements Board {
     private final BrickRotator brickRotator;
     private int[][] currentGameMatrix;
     private Point currentOffset;
-    private final Score score;
     private Brick holdBrick = null;
     private boolean holdUsedThisTurn = false;
     private Brick currentBrick;
@@ -30,7 +29,6 @@ public class SimpleBoard implements Board {
         currentGameMatrix = new int[height][width];  // Note: [height][width] for row-major
         brickGenerator = new RandomBrickGenerator();
         brickRotator = new BrickRotator();
-        score = new Score();
 
         // Initialize with empty board
         for (int i = 0; i < height; i++) {
@@ -228,16 +226,27 @@ public class SimpleBoard implements Board {
 
     @Override
     public Score getScore() {
-        return score;
+        return null;
     }
 
     @Override
     public void newGame() {
+        reset();
+        createNewBrick();
+    }
+
+    @Override
+    public void reset() {
+        System.out.println("=== SIMPLEBOARD RESET ===");
+
+        // Clear the board matrix
         currentGameMatrix = new int[height][width];
+
+        // Reset game state
         holdBrick = null;
         holdUsedThisTurn = false;
         currentBrick = null;
-        score.reset();
-        createNewBrick();
+
+        System.out.println("Board reset complete");
     }
 }

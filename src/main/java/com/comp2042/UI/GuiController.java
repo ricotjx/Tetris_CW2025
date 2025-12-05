@@ -151,10 +151,6 @@ public class GuiController implements Initializable {
         System.out.println("Starting game mode: " + gameMode);
         hideHomePage();
 
-        // Create the GameController only when starting a game
-        if (eventListener == null) {
-            eventListener = new GameController(this);
-        }
         newGame();
     }
 
@@ -179,6 +175,9 @@ public class GuiController implements Initializable {
             timeLine.stop();
         }
         stopTimer();
+
+        // Clear hold preview when returning to home
+        updateHoldBrickPreview(null);
     }
 
     public void hideHomePage() {
@@ -291,7 +290,13 @@ public class GuiController implements Initializable {
 
         holdPanel.getChildren().clear();
 
-        if (holdBrick == null) return;
+        if (holdBrick == null) {
+            Label holdLabel = new Label("HOLD");
+            holdLabel.setStyle("-fx-font-family: 'Arial'; -fx-font-size: 14px; -fx-text-fill: gray;");
+            holdLabel.setAlignment(javafx.geometry.Pos.CENTER);
+            holdPanel.add(holdLabel, 1, 1, 2, 2);
+            return;
+        }
 
         int rows = holdBrick.length;
         int cols = holdBrick[0].length;
@@ -583,8 +588,9 @@ public class GuiController implements Initializable {
     private void stopTimer() {
         if (timerTimeLine != null) {
             timerTimeLine.stop();
-            isTimerRunning = false;
+            timerTimeLine = null;
         }
+        isTimerRunning = false;
     }
 
     private void resetTimer() {
@@ -664,6 +670,9 @@ public class GuiController implements Initializable {
             gameController.stopGame();
         }
 
+        // Clear hold preview on game over
+        updateHoldBrickPreview(null);
+
         // Show game over panel
         if (gameOverContainer != null && gameOverPanel != null) {
             gameOverPanel.setFinalScore(finalScore);
@@ -730,33 +739,24 @@ public class GuiController implements Initializable {
             gamePanel.requestFocus();
         }
 
-        if (eventListener == null) {
-            eventListener = new GameController(this);
-        } else if (eventListener instanceof GameController) {
-            GameController gameController = (GameController) eventListener;
+        // Always create a new GameController instance to ensure fresh state
+        System.out.println("Creating NEW GameController instance...");
+        eventListener = new GameController(this);  // Always create new
 
-            // CALL RESET to get fresh instances
-            gameController.reset();
+        if (eventListener instanceof GameController gameController) {
+            System.out.println("GameController created, calling createNewGame()...");
+            gameController.createNewGame();  // This sets gameStarted = true
 
-            // THEN create the new game
-            gameController.createNewGame();
-
+            System.out.println("Updating UI...");
             updateStats(gameController.getScore());
             initGameView(gameController.getCurrentBoard(), gameController.getViewData());
         }
 
+        // Clear hold preview when starting new game
+        updateHoldBrickPreview(null);
+
         // Start new timer
         startTimer();
-
-        // Use level 1 speed explicitly
-        long initialSpeed = getSpeedForLevel(1);
-
-        timeLine = new Timeline(new KeyFrame(
-                Duration.millis(initialSpeed),
-                event -> moveDown(new MoveEvent(EventType.DOWN, EventSource.THREAD))
-        ));
-        timeLine.setCycleCount(Timeline.INDEFINITE);
-        timeLine.play();
 
         if (gamePanel != null) {
             gamePanel.requestFocus();
@@ -806,7 +806,19 @@ public class GuiController implements Initializable {
             stopTimer();
         } else if (!isPause.get() && timeLine != null && !isGameOver.get()) {
             timeLine.play();
-            startTimer();
+            // RESUME timer instead of starting new one
+            if (!isTimerRunning) {
+                // Resume from current elapsed time
+                startTime = System.currentTimeMillis() - elapsedTime;
+                isTimerRunning = true;
+
+                timerTimeLine = new Timeline(new KeyFrame(
+                        Duration.millis(100),
+                        event -> updateTimerDisplay()
+                ));
+                timerTimeLine.setCycleCount(Timeline.INDEFINITE);
+                timerTimeLine.play();
+            }
         }
         if (gamePanel != null) {
             gamePanel.requestFocus();

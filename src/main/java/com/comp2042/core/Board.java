@@ -30,4 +30,6 @@ public interface Board {
     void holdCurrentBrick();
 
     void hardDrop();
+
+    void reset();
 }

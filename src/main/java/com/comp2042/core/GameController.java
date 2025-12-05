@@ -21,10 +21,19 @@ public class GameController implements InputEventListener {
     public GameController(GuiController c) {
         System.out.println("=== GAME CONTROLLER CONSTRUCTOR ===");
         viewGuiController = c;
-        reset();
+        initializeGameState();
         viewGuiController.setEventListener(this);
         viewGuiController.bindScore(score.scoreProperty());
         viewGuiController.setOnRestartGame(this::createNewGame);
+    }
+
+    private void initializeGameState() {
+        // Reset without creating brick
+        score.reset();
+        this.hardDropDistance = 0;
+        this.isSoftDropping = false;
+        this.gameStarted = false;
+        this.gameEnded = false;
     }
 
     @Override
@@ -160,12 +169,11 @@ public class GameController implements InputEventListener {
         // Stop any ongoing game logic
         stopGame();
 
-        // Create fresh instances - this is crucial!
-        this.board = new SimpleBoard(10, 20);
-        this.score = new Score(); // Fresh Score instance - this resets level to 1
+        // Reset the board
+        board.newGame();
 
-        // Re-bind the score to gui controller
-        viewGuiController.bindScore(score.scoreProperty());
+        // Reset the score
+        score.reset();
 
         // Reset all game state variables
         this.hardDropDistance = 0;
@@ -177,14 +185,18 @@ public class GameController implements InputEventListener {
     @Override
     public void createNewGame() {
         board.newGame();
-        score.reset();
-        hardDropDistance = 0;
-        isSoftDropping = false;
+
         gameStarted = true;
         gameEnded = false;
 
-        // Initialize the game view and start first brick
-        board.createNewBrick();
+        // Refresh the view
+        viewGuiController.refreshGameBackground(board.getBoardMatrix());
+    }
+
+    private boolean boardHasBrick() {
+        // Check if there's a current brick in the board
+        // You might need to add a method to Board interface
+        return getViewData().getBrickData() != null;
     }
 
     public Score getScore() {

@@ -124,6 +124,7 @@
                     <Label text="C : Hold Brick" styleClass="helpInfo"/>
                     <Label text="N : New Game" styleClass="helpInfo"/>
                     <Label text="Esc : Pause" styleClass="helpInfo"/>
+                    <Label text="H : Main Menu" styleClass="helpInfo"/>
                 </VBox>
             </HBox>
         </VBox>

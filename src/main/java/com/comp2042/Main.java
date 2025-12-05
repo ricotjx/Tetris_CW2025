@@ -24,15 +24,11 @@ public class Main extends Application {
 
         primaryStage.setTitle("TetrisJFX");
 
-        int boardWidth = 10 * 20;
-        int boardHeight = 20 * 20;
-        int sidePanelWidth = 350;
-        int windowHeight = boardHeight + sidePanelWidth;
-
-        Scene scene = new Scene(root, boardWidth + sidePanelWidth, windowHeight);
+        Scene scene = new Scene(root);
         primaryStage.setScene(scene);
-        primaryStage.setMinWidth(boardWidth + sidePanelWidth);
-        primaryStage.setMinHeight(windowHeight);
+        primaryStage.sizeToScene();
+        primaryStage.setMinWidth(600);
+        primaryStage.setMinHeight(700);
         primaryStage.show();
     }
 
