@@ -40,34 +40,34 @@ public class InputHandler {
 
     private void handleGameInput(KeyCode code, KeyEvent keyEvent) {
         switch (code) {
-            case LEFT:
+            case LEFT:  // Move brick left
             case A:
                 guiController.refreshGameView(eventListener.onLeftEvent(new MoveEvent(EventType.LEFT, EventSource.USER)));
                 keyEvent.consume();
                 break;
-            case RIGHT:
+            case RIGHT: // Move brick right
             case D:
                 guiController.refreshGameView(eventListener.onRightEvent(new MoveEvent(EventType.RIGHT, EventSource.USER)));
                 keyEvent.consume();
                 break;
-            case UP:
+            case UP:    // Rotate brick
             case W:
                 guiController.refreshGameView(eventListener.onRotateEvent(new MoveEvent(EventType.ROTATE, EventSource.USER)));
                 keyEvent.consume();
                 break;
-            case DOWN:
+            case DOWN:  // Move brick down
             case S:
                 guiController.moveDown(new MoveEvent(EventType.DOWN, EventSource.USER));
                 keyEvent.consume();
                 break;
-            case SPACE:
+            case SPACE: // Hard drop
                 if (eventListener instanceof GameController gc) {
                     gc.hardDrop();
                     guiController.refreshGameView(gc.getViewData());
                 }
                 keyEvent.consume();
                 break;
-            case C:
+            case C: // Hold brick
                 ViewData holdView = eventListener.onHoldEvent(new MoveEvent(EventType.HOLD, EventSource.USER));
                 if (holdView != null) {
                     guiController.refreshGameView(holdView);
@@ -79,13 +79,13 @@ public class InputHandler {
 
     private void handleSystemInput(KeyCode code) {
         switch (code) {
-            case N:
+            case N: // New game
                 guiController.newGame();
                 break;
-            case H:
+            case H: // Go to main menu
                 guiController.showHomePage();
                 break;
-            case ESCAPE:
+            case ESCAPE:    // Pause game
                 guiController.pauseGame();
                 break;
         }

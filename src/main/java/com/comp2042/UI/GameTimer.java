@@ -24,6 +24,7 @@ public class GameTimer {
         startTime = System.currentTimeMillis() - elapsedTime;
         isRunning = true;
 
+        // Create timeline that updates every 100ms
         timeline = new Timeline(new KeyFrame(
                 Duration.millis(100),
                 event -> update()
@@ -32,6 +33,7 @@ public class GameTimer {
         timeline.play();
     }
 
+    // Pauses the timer while preserving elapsed time
     public void pause() {
         if (!isRunning) return;
 
@@ -42,11 +44,13 @@ public class GameTimer {
         // elapsedTime is preserved
     }
 
+    // Resumes the timer from where it was paused
     public void resume() {
         if (isRunning) return;
         start();
     }
 
+    // Stops the timer
     public void stop() {
         if (timeline != null) {
             timeline.stop();
@@ -55,11 +59,13 @@ public class GameTimer {
         isRunning = false;
     }
 
+    // Resets the timer to zero and stops it
     public void reset() {
         stop();
         elapsedTime = 0;
     }
 
+    // Updates elapsed time and trigger callback if set
     private void update() {
         elapsedTime = System.currentTimeMillis() - startTime;
 
@@ -70,20 +76,24 @@ public class GameTimer {
         }
     }
 
+    // Gets the elapsed time formatted as MM:SS
     public String getFormattedTime() {
         long seconds = (elapsedTime / 1000) % 60;
         long minutes = (elapsedTime / (1000 * 60)) % 60;
         return String.format("%02d:%02d", minutes, seconds);
     }
 
+    // Gets the elapsed time in milliseconds
     public long getElapsedTime() {
         return elapsedTime;
     }
 
+    // Checks if the timer is currently running
     public boolean isRunning() {
         return isRunning;
     }
 
+    // Sets a callback to be executed on each timer tick (every 100ms)
     public void setOnTickCallback(Callback<Void, String> callback) {
         this.onTickCallback.set(callback);
     }

@@ -77,10 +77,12 @@ public class GuiController implements Initializable {
 
     private Runnable onRestartGame;
 
+    // Initializes the controller after FXML loading
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         homePanel = new HomePanel();
         gameOverPanel = new GameOverPanel();
+        // Initialize component managers
         gameRenderer = new GameRenderer(gamePanel, brickPanel, holdPanel, groupNotification,
                 scoreLabel, levelLabel, linesLabel, comboLabel, timerLabel);
         inputHandler = new InputHandler(this);
@@ -101,6 +103,7 @@ public class GuiController implements Initializable {
         setupHomePageActions();
         setupGameOverActions();
 
+        // Load custom font
         try {
             URL fontUrl = getClass().getClassLoader().getResource("digital.ttf");
             if (fontUrl != null) {
@@ -110,12 +113,14 @@ public class GuiController implements Initializable {
             System.err.println("Could not load font: " + e.getMessage());
         }
 
+        // Set up game panel for input
         if (gamePanel != null) {
             gamePanel.setFocusTraversable(true);
             gamePanel.requestFocus();
             gamePanel.setOnKeyPressed(this::handleKeyPressed);
         }
 
+        // Initialize score display
         if (scoreLabel != null) {
             scoreLabel.setText("0");
         }
@@ -142,6 +147,7 @@ public class GuiController implements Initializable {
         });
     }
 
+    // Sets up home page button actions
     private void setupHomePageActions() {
         if (homePanel != null) {
             homePanel.getZenModeButton().setOnAction(actionEvent -> startGame("ZEN"));
@@ -150,6 +156,7 @@ public class GuiController implements Initializable {
         }
     }
 
+    // Starts a new game with specified game mode
     private void startGame(String gameMode) {
         System.out.println("Starting game mode: " + gameMode);
         hideHomePage();
@@ -157,6 +164,7 @@ public class GuiController implements Initializable {
         newGame();
     }
 
+    // Shows the home page (main menu) and resets game state
     public void showHomePage() {
         if (homeContainer != null) {
             homeContainer.setVisible(true);
@@ -182,6 +190,7 @@ public class GuiController implements Initializable {
         gameRenderer.clearHoldPreview();
     }
 
+    // Hides the home page (main menu)
     public void hideHomePage() {
         if (homeContainer != null) {
             homeContainer.setVisible(false);
@@ -189,6 +198,7 @@ public class GuiController implements Initializable {
         gameStateManager.setHomeScreen(false);
     }
 
+    // Initializes the stats display with default values
     private void initializeStatsDisplay() {
         if (levelLabel != null) {
             levelLabel.setText("1");
@@ -204,6 +214,7 @@ public class GuiController implements Initializable {
         }
     }
 
+    // Sets up game over panel button actions
     private void setupGameOverActions() {
         if (gameOverPanel != null) {
             gameOverPanel.getRestartButton().setOnAction(event -> {
@@ -218,10 +229,12 @@ public class GuiController implements Initializable {
         }
     }
 
+    // Sets callback for game restart
     public void setOnRestartGame(Runnable onRestartGame) {
         this.onRestartGame = onRestartGame;
     }
 
+    // Handles keyboard input by delegating to InputHandler
     private void handleKeyPressed(KeyEvent keyEvent) {
         inputHandler.handleKeyPressed(keyEvent,
                 gameStateManager.isHomeScreen(),
@@ -229,6 +242,7 @@ public class GuiController implements Initializable {
                 gameStateManager.isPause());
     }
 
+    // Initializes the game view with board and brick data
     public void initGameView(int[][] boardMatrix, ViewData viewData) {
         gameRenderer.initGameView(boardMatrix, viewData);
 
@@ -243,15 +257,17 @@ public class GuiController implements Initializable {
         timeLine.play();
     }
 
+    // Refreshes the entire game view
     public void refreshGameView(ViewData viewData) {
         gameRenderer.refreshGameView(viewData);
     }
 
+    // Refreshes only the game background
     public void refreshGameBackground(int[][] board) {
         gameRenderer.refreshGameBackground(board);
     }
 
-    // This method needs to be public for InputHandler to call it
+    // Moves current brick down one position
     public boolean moveDown(MoveEvent event) {
         if (eventListener == null || gameStateManager.isPause()) return false;
 
@@ -260,9 +276,11 @@ public class GuiController implements Initializable {
             refreshGameView(downData.getViewData());
             updateStatsFromGameController();
 
+            // Handle cleared rows
             if (downData.getClearRow() != null && downData.getClearRow().getLinesRemoved() > 0) {
                 gameRenderer.refreshGameBackground(downData.getClearRow().getNewMatrix());
 
+                // Show score notification
                 if (groupNotification != null) {
                     try {
                         NotificationPanel notificationPanel = new NotificationPanel("+" + downData.getClearRow().getScoreBonus());
@@ -282,6 +300,7 @@ public class GuiController implements Initializable {
         return false;
     }
 
+    // Updates stats from game controller
     private void updateStatsFromGameController() {
         if (eventListener instanceof GameController) {
             GameController gameController = (GameController) eventListener;
@@ -289,6 +308,7 @@ public class GuiController implements Initializable {
         }
     }
 
+    // Gets message for lines cleared
     private String getClearMessage(int linesCleared) {
         return switch (linesCleared) {
             case 1 -> "SINGLE";
@@ -299,6 +319,7 @@ public class GuiController implements Initializable {
         };
     }
 
+    // Sets the game event listener
     public void setEventListener(InputEventListener eventListener) {
         this.eventListener = eventListener;
         inputHandler.setEventListener(eventListener);
@@ -310,23 +331,27 @@ public class GuiController implements Initializable {
         }
     }
 
+    // Binds score label to score property
     public void bindScore(IntegerProperty integerProperty) {
         if (scoreLabel != null && integerProperty != null) {
             scoreLabel.textProperty().bind(integerProperty.asString());
         }
     }
 
+    // Updates score properties from Score object
     public void bindScoreProperties(Score score) {
         if (score != null) {
             updateStats(score);
         }
     }
 
+    // Updates all game stats
     private void updateStats(Score score) {
         gameRenderer.updateStats(score);
         updateGameSpeed(score.getLevel());
     }
 
+    // Updates game speed based on current level
     private void updateGameSpeed(int level) {
         if (timeLine != null) {
             timeLine.stop();
@@ -341,18 +366,21 @@ public class GuiController implements Initializable {
     }
 
     // Timer methods
+    // Starts the game timer
     private void startTimer() {
         if (gameTimer != null) {
             gameTimer.start();
         }
     }
 
+    // Stops the game timer
     private void stopTimer() {
         if (gameTimer != null) {
             gameTimer.stop();
         }
     }
 
+    // Resets the game timer
     private void resetTimer() {
         if (gameTimer != null) {
             gameTimer.reset();
@@ -362,6 +390,7 @@ public class GuiController implements Initializable {
         }
     }
 
+    // Gets formatted game time
     public String getFormattedTime() {
         if (gameTimer != null) {
             return gameTimer.getFormattedTime();
@@ -369,6 +398,7 @@ public class GuiController implements Initializable {
         return "00:00";
     }
 
+    // Gets elapsed time in milliseconds
     public long getElapsedTime() {
         if (gameTimer != null) {
             return gameTimer.getElapsedTime();
@@ -376,6 +406,7 @@ public class GuiController implements Initializable {
         return 0;
     }
 
+    // Checks if timer is running
     public boolean isTimerRunning() {
         if (gameTimer != null) {
             return gameTimer.isRunning();
@@ -383,6 +414,7 @@ public class GuiController implements Initializable {
         return false;
     }
 
+    // Shows special clear messages
     public void showSpecialClearMessage(String message, int durationMs) {
         if (groupNotification != null) {
             try {
@@ -411,6 +443,7 @@ public class GuiController implements Initializable {
         }
     }
 
+    // Handles game over sequence
     public void gameOver(int finalScore) {
         System.out.println("=== GUI CONTROLLER: GAME OVER CALLED ===");
 
@@ -459,6 +492,7 @@ public class GuiController implements Initializable {
         gameStateManager.gameOver();
     }
 
+    // Starts a new game
     public void newGame() {
         System.out.println("=== STARTING NEW GAME ===");
 
@@ -481,13 +515,13 @@ public class GuiController implements Initializable {
             gameOverContainer.setVisible(false);
         }
 
-        // Make sure game panel is visible and focused
+        // Focus game panel
         if (gamePanel != null) {
             gamePanel.setVisible(true);
             gamePanel.requestFocus();
         }
 
-        // Always create a new GameController instance to ensure fresh state
+        // create a new GameController instance to ensure fresh state
         System.out.println("Creating NEW GameController instance...");
         eventListener = new GameController(this);  // Always create new
 
@@ -512,6 +546,7 @@ public class GuiController implements Initializable {
         }
     }
 
+    // Calculates current drop speed based on level
     private long dropSpeed() {
         int level = 1; // Default to level 1
 
@@ -525,6 +560,8 @@ public class GuiController implements Initializable {
         return getSpeedForLevel(level);
     }
 
+    // Gets drop speed for specific level
+    // Based on classic tetris level speeds
     private long getSpeedForLevel(int level) {
         return switch (level) {
             case 1 -> 1500;  // 1.5s
@@ -546,6 +583,7 @@ public class GuiController implements Initializable {
         };
     }
 
+    // Toggles game pause state
     public void pauseGame() {
         gameStateManager.togglePause();
 
@@ -568,6 +606,7 @@ public class GuiController implements Initializable {
         }
     }
 
+    // Hides game over panel
     public void hideGameOverPanel() {
         if (gameOverContainer != null) {
             gameOverContainer.setVisible(false);

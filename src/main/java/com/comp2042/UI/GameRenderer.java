@@ -41,6 +41,7 @@ public class GameRenderer {
         this.timerLabel = timerLabel;
     }
 
+    // Initializes the game view with the current board state
     public void initGameView(int[][] boardMatrix, ViewData viewData) {
         if (boardMatrix == null || boardMatrix.length == 0) {
             throw new IllegalArgumentException("Board matrix cannot be null or empty");
@@ -70,6 +71,7 @@ public class GameRenderer {
         updateNextBrickPreview(viewData);
     }
 
+    // Refreshes the entire game view with updated data
     public void refreshGameView(ViewData viewData) {
         if (viewData == null) return;
 
@@ -79,6 +81,7 @@ public class GameRenderer {
         updateHoldBrickPreview(viewData.getHoldBrickData());
     }
 
+    // Updates only the game background (placed bricks)
     public void refreshGameBackground(int[][] board) {
         if (board == null || displayMatrix == null) return;
 
@@ -93,6 +96,7 @@ public class GameRenderer {
         }
     }
 
+    // Draws the currently falling brick
     private void drawFallingBrick(ViewData viewData) {
         if (viewData == null || viewData.getBrickData() == null) return;
 
@@ -115,6 +119,7 @@ public class GameRenderer {
         }
     }
 
+    // Updates the next brick preview panel
     private void updateNextBrickPreview(ViewData viewData) {
         if (brickPanel != null) {
             brickPanel.getChildren().clear();
@@ -129,6 +134,7 @@ public class GameRenderer {
             int panelRows = 4;
             int panelCols = 4;
 
+            // Center the next brick in the preview panel
             int rowOffset = (panelRows - rows) / 2;
             int colOffset = (panelCols - cols) / 2;
 
@@ -148,12 +154,14 @@ public class GameRenderer {
         }
     }
 
+    // Updates the hold brick preview panel
     public void updateHoldBrickPreview(int[][] holdBrick) {
         if (holdPanel == null) return;
 
         holdPanel.getChildren().clear();
 
         if (holdBrick == null) {
+            // Show "HOLD" placeholder when no brick is held
             Label holdLabel = new Label("HOLD");
             holdLabel.setStyle("-fx-font-family: 'Arial'; -fx-font-size: 14px; -fx-text-fill: gray;");
             holdLabel.setAlignment(javafx.geometry.Pos.CENTER);
@@ -167,6 +175,7 @@ public class GameRenderer {
         int panelRows = 4;
         int panelCols = 4;
 
+        // Center the brick in the hold panel
         int rowOffset = (panelRows - rows) / 2;
         int colOffset = (panelCols - cols) / 2;
 
@@ -214,13 +223,17 @@ public class GameRenderer {
         }
     }
 
+    // Updates all score and statistic displays
     public void updateStats(Score score) {
+        // level
         if (levelLabel != null) {
             levelLabel.setText(String.valueOf(score.getLevel()));
         }
+        // lines cleared
         if (linesLabel != null) {
             linesLabel.setText(String.valueOf(score.getTotalLinesCleared()));
         }
+        // combo
         if (comboLabel != null) {
             comboLabel.setText("x" + score.getComboCount());
             if (score.getComboCount() > 1) {
@@ -233,6 +246,7 @@ public class GameRenderer {
         }
     }
 
+    // Clears the hold brick preview panel
     public void clearHoldPreview() {
         updateHoldBrickPreview(null);
     }

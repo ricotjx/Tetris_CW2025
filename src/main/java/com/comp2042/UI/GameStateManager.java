@@ -30,12 +30,14 @@ public class GameStateManager {
         this.gameController = gameController;
     }
 
+    // Transitions to new game state
     public void startNewGame() {
         isGameOver.set(false);
         isPause.set(false);
         isHomeScreen.set(false);
     }
 
+    // Transitions to game over state and stops the game controller
     public void gameOver() {
         isGameOver.set(true);
         isHomeScreen.set(false);
@@ -46,38 +48,46 @@ public class GameStateManager {
         }
     }
 
+    // Toggle pause state
     public void togglePause() {
         isPause.set(!isPause.get());
     }
 
+    // Pauses the game
     public void pause() {
         isPause.set(true);
     }
 
+    // Resumes the game
     public void resume() {
         isPause.set(false);
     }
 
+    // Returns to home screen (main menu)
     public void goHome() {
         isHomeScreen.set(true);
         isGameOver.set(false);
         isPause.set(false);
     }
 
+    // Resets all states to default
     public void reset() {
         isPause.set(false);
         isGameOver.set(false);
         isHomeScreen.set(true);
     }
 
+    // Checks if game input should be processed
     public boolean canProcessGameInput() {
         return !isHomeScreen() && !isGameOver() && !isPause();
     }
 
+    // Checks if a game is currently active
     public boolean isGameActive() {
         return !isHomeScreen() && !isGameOver();
     }
 
+    // Stops the game and transitions to game over state
     public void stopGame() {
         if (gameController != null) {
             gameController.stopGame();
