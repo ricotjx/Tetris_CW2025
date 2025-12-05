@@ -11,15 +11,12 @@ import com.comp2042.model.events.InputEventListener;
 import com.comp2042.UI.GameOverPanel;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
@@ -73,13 +70,10 @@ public class GuiController implements Initializable {
     private GameOverPanel gameOverPanel;
     private GameRenderer gameRenderer;
     private InputHandler inputHandler;
+    private GameStateManager gameStateManager;
     private InputEventListener eventListener;
     private Timeline timeLine;
     private GameTimer gameTimer;
-
-    private final BooleanProperty isPause = new SimpleBooleanProperty(false);
-    private final BooleanProperty isGameOver = new SimpleBooleanProperty(false);
-    private final BooleanProperty isHomeScreen = new SimpleBooleanProperty(true);
 
     private Runnable onRestartGame;
 
@@ -90,6 +84,7 @@ public class GuiController implements Initializable {
         gameRenderer = new GameRenderer(gamePanel, brickPanel, holdPanel, groupNotification,
                 scoreLabel, levelLabel, linesLabel, comboLabel, timerLabel);
         inputHandler = new InputHandler(this);
+        gameStateManager = new GameStateManager();
 
         // Add home panel to home container
         if (homeContainer != null && homePanel != null) {
@@ -175,8 +170,7 @@ public class GuiController implements Initializable {
             homePanel.showPanel();
         }
 
-        isHomeScreen.set(true);
-        isGameOver.set(false);
+        gameStateManager.goHome();
 
         // Stop any existing game timers when showing home page
         if (timeLine != null) {
@@ -192,7 +186,7 @@ public class GuiController implements Initializable {
         if (homeContainer != null) {
             homeContainer.setVisible(false);
         }
-        isHomeScreen.set(false);
+        gameStateManager.setHomeScreen(false);
     }
 
     private void initializeStatsDisplay() {
@@ -229,7 +223,10 @@ public class GuiController implements Initializable {
     }
 
     private void handleKeyPressed(KeyEvent keyEvent) {
-        inputHandler.handleKeyPressed(keyEvent, isHomeScreen.get(), isGameOver.get(), isPause.get());
+        inputHandler.handleKeyPressed(keyEvent,
+                gameStateManager.isHomeScreen(),
+                gameStateManager.isGameOver(),
+                gameStateManager.isPause());
     }
 
     public void initGameView(int[][] boardMatrix, ViewData viewData) {
@@ -256,7 +253,7 @@ public class GuiController implements Initializable {
 
     // This method needs to be public for InputHandler to call it
     public boolean moveDown(MoveEvent event) {
-        if (eventListener == null || isPause.get()) return false;
+        if (eventListener == null || gameStateManager.isPause()) return false;
 
         DownData downData = eventListener.onDownEvent(event);
         if (downData != null) {
@@ -309,6 +306,7 @@ public class GuiController implements Initializable {
             GameController gameController = (GameController) eventListener;
             bindScore(gameController.getScore().scoreProperty());
             bindScoreProperties(gameController.getScore());
+            gameStateManager.setGameController(gameController);
         }
     }
 
@@ -423,12 +421,6 @@ public class GuiController implements Initializable {
         }
         stopTimer();
 
-        // Stop the game controller
-        if (eventListener instanceof GameController) {
-            GameController gameController = (GameController) eventListener;
-            gameController.stopGame();
-        }
-
         // Clear hold preview on game over
         gameRenderer.clearHoldPreview();
 
@@ -463,8 +455,8 @@ public class GuiController implements Initializable {
 
             System.out.println("=== GAME OVER PANEL SHOULD BE VISIBLE ===");
         }
-        isGameOver.set(true);
-        isHomeScreen.set(false);
+
+        gameStateManager.gameOver();
     }
 
     public void newGame() {
@@ -479,10 +471,7 @@ public class GuiController implements Initializable {
         stopTimer();
         resetTimer();
 
-        // Reset game states
-        isGameOver.set(false);
-        isPause.set(false);
-        isHomeScreen.set(false);
+        gameStateManager.startNewGame();
 
         // Hide both containers to show the game
         if (homeContainer != null) {
@@ -504,6 +493,7 @@ public class GuiController implements Initializable {
 
         if (eventListener instanceof GameController gameController) {
             System.out.println("GameController created, calling createNewGame()...");
+            gameStateManager.setGameController(gameController);
             gameController.createNewGame();  // This sets gameStarted = true
 
             System.out.println("Updating UI...");
@@ -557,20 +547,22 @@ public class GuiController implements Initializable {
     }
 
     public void pauseGame() {
-        isPause.set(!isPause.get());
-        if (isPause.get()) {
+        gameStateManager.togglePause();
+
+        if (gameStateManager.isPause()) {
             if (timeLine != null) {
                 timeLine.stop();
             }
             if (gameTimer != null) {
                 gameTimer.pause();
             }
-        } else if (!isPause.get() && timeLine != null && !isGameOver.get()) {
+        } else if (timeLine != null && gameStateManager.isGameActive()) {
             timeLine.play();
             if (gameTimer != null) {
                 gameTimer.resume();
             }
         }
+
         if (gamePanel != null) {
             gamePanel.requestFocus();
         }
@@ -591,7 +583,6 @@ public class GuiController implements Initializable {
             gameOverPanel.layout();
         }
 
-        isGameOver.set(false);
-        isPause.set(false);
+        gameStateManager.reset();
     }
 }
