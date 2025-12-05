@@ -24,9 +24,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
 import java.net.URL;
@@ -35,8 +32,6 @@ import javafx.application.Platform;
 import javafx.util.Callback;
 
 public class GuiController implements Initializable {
-
-    private static final int BRICK_SIZE = 20;
 
     @FXML
     private GridPane gamePanel;
@@ -76,9 +71,8 @@ public class GuiController implements Initializable {
 
     private HomePanel homePanel;
     private GameOverPanel gameOverPanel;
-    private Rectangle[][] displayMatrix;
+    private GameRenderer gameRenderer;
     private InputEventListener eventListener;
-    private Rectangle[][] nextBrickRectangles;
     private Timeline timeLine;
     private GameTimer gameTimer;
 
@@ -86,13 +80,14 @@ public class GuiController implements Initializable {
     private final BooleanProperty isGameOver = new SimpleBooleanProperty(false);
     private final BooleanProperty isHomeScreen = new SimpleBooleanProperty(true);
 
-    private int[][] currentBoardMatrix;
     private Runnable onRestartGame;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         homePanel = new HomePanel();
         gameOverPanel = new GameOverPanel();
+        gameRenderer = new GameRenderer(gamePanel, brickPanel, holdPanel, groupNotification,
+                scoreLabel, levelLabel, linesLabel, comboLabel, timerLabel);
 
         // Add home panel to home container
         if (homeContainer != null && homePanel != null) {
@@ -188,7 +183,7 @@ public class GuiController implements Initializable {
         stopTimer();
 
         // Clear hold preview when returning to home
-        updateHoldBrickPreview(null);
+        gameRenderer.clearHoldPreview();
     }
 
     public void hideHomePage() {
@@ -297,65 +292,11 @@ public class GuiController implements Initializable {
     }
 
     private void updateHoldBrickPreview(int[][] holdBrick) {
-        if (holdPanel == null) return;
-
-        holdPanel.getChildren().clear();
-
-        if (holdBrick == null) {
-            Label holdLabel = new Label("HOLD");
-            holdLabel.setStyle("-fx-font-family: 'Arial'; -fx-font-size: 14px; -fx-text-fill: gray;");
-            holdLabel.setAlignment(javafx.geometry.Pos.CENTER);
-            holdPanel.add(holdLabel, 1, 1, 2, 2);
-            return;
-        }
-
-        int rows = holdBrick.length;
-        int cols = holdBrick[0].length;
-
-        int panelRows = 4;
-        int panelCols = 4;
-
-        int rowOffset = (panelRows - rows) / 2;
-        int colOffset = (panelCols - cols) / 2;
-
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                if (holdBrick[i][j] != 0) {
-                    Rectangle r = new Rectangle(BRICK_SIZE, BRICK_SIZE);
-                    r.setFill(getFillColor(holdBrick[i][j]));
-                    holdPanel.add(r, j + colOffset, i + rowOffset);
-                }
-            }
-        }
+        gameRenderer.updateHoldBrickPreview(holdBrick);
     }
 
     public void initGameView(int[][] boardMatrix, ViewData viewData) {
-        if (boardMatrix == null || boardMatrix.length == 0) {
-            throw new IllegalArgumentException("Board matrix cannot be null or empty");
-        }
-
-        this.currentBoardMatrix = copyMatrix(boardMatrix);
-
-        if (gamePanel != null) {
-            gamePanel.getChildren().clear();
-        }
-
-        displayMatrix = new Rectangle[boardMatrix.length][boardMatrix[0].length];
-
-        for (int i = 0; i < boardMatrix.length; i++) {
-            for (int j = 0; j < boardMatrix[i].length; j++) {
-                Rectangle rectangle = new Rectangle(BRICK_SIZE, BRICK_SIZE);
-                rectangle.setFill(getFillColor(boardMatrix[i][j]));
-                rectangle.setStroke(Color.GRAY);
-                rectangle.setStrokeWidth(0.5);
-                displayMatrix[i][j] = rectangle;
-                if (gamePanel != null) {
-                    gamePanel.add(rectangle, j, i);
-                }
-            }
-        }
-
-        updateNextBrickPreview(viewData);
+        gameRenderer.initGameView(boardMatrix, viewData);
 
         // Start timer when game initializes
         startTimer();
@@ -368,115 +309,16 @@ public class GuiController implements Initializable {
         timeLine.play();
     }
 
-    private void updateNextBrickPreview(ViewData viewData) {
-        if (brickPanel != null) {
-            brickPanel.getChildren().clear();
-        }
-
-        if (viewData != null && viewData.getNextBrickData() != null) {
-            int[][] nextBrickData = viewData.getNextBrickData();
-
-            int rows = nextBrickData.length;
-            int cols = nextBrickData[0].length;
-
-            int panelRows = 4;
-            int panelCols = 4;
-
-            int rowOffset = (panelRows - rows) / 2;
-            int colOffset = (panelCols - cols) / 2;
-
-            nextBrickRectangles = new Rectangle[nextBrickData.length][nextBrickData[0].length];
-            for (int i = 0; i < nextBrickData.length; i++) {
-                for (int j = 0; j < nextBrickData[i].length; j++) {
-                    if (nextBrickData[i][j] != 0) {
-                        Rectangle rectangle = new Rectangle(BRICK_SIZE, BRICK_SIZE);
-                        rectangle.setFill(getFillColor(nextBrickData[i][j]));
-                        nextBrickRectangles[i][j] = rectangle;
-                        if (brickPanel != null) {
-                            brickPanel.add(rectangle, j + colOffset, i + rowOffset);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private Paint getFillColor(int colorCode) {
-        return switch (colorCode) {
-            case 0 -> Color.TRANSPARENT;
-            case 1 -> Color.AQUA;
-            case 2 -> Color.BLUE;
-            case 3 -> Color.ORANGE;
-            case 4 -> Color.YELLOW;
-            case 5 -> Color.GREEN;
-            case 6 -> Color.PURPLE;
-            case 7 -> Color.RED;
-            default -> Color.WHITE;
-        };
-    }
-
     private void refreshGameView(ViewData viewData) {
-        if (viewData == null) return;
-
-        refreshGameBackground(currentBoardMatrix);
-        drawFallingBrick(viewData);
-        updateNextBrickPreview(viewData);
-        updateHoldBrickPreview(viewData.getHoldBrickData());
+        gameRenderer.refreshGameView(viewData);
     }
 
     private void drawFallingBrick(ViewData viewData) {
-        if (viewData == null || viewData.getBrickData() == null) return;
-
-        int[][] brickData = viewData.getBrickData();
-        int xPos = viewData.getxPosition();
-        int yPos = viewData.getyPosition();
-
-        for (int i = 0; i < brickData.length; i++) {
-            for (int j = 0; j < brickData[i].length; j++) {
-                if (brickData[i][j] != 0) {
-                    int gridX = xPos + j;
-                    int gridY = yPos + i;
-
-                    if (gridY >= 0 && gridY < displayMatrix.length &&
-                            gridX >= 0 && gridX < displayMatrix[0].length) {
-                        setRectangleData(brickData[i][j], displayMatrix[gridY][gridX]);
-                    }
-                }
-            }
-        }
+        // This is now handled by GameRenderer
     }
 
     public void refreshGameBackground(int[][] board) {
-        if (board == null || displayMatrix == null) return;
-
-        this.currentBoardMatrix = copyMatrix(board);
-
-        for (int i = 0; i < board.length; i++) {
-            for (int j = 0; j < board[i].length; j++) {
-                if (i < displayMatrix.length && j < displayMatrix[i].length && displayMatrix[i][j] != null) {
-                    setRectangleData(board[i][j], displayMatrix[i][j]);
-                }
-            }
-        }
-    }
-
-    private int[][] copyMatrix(int[][] original) {
-        if (original == null) return new int[0][0];
-        int[][] copy = new int[original.length][];
-        for (int i = 0; i < original.length; i++) {
-            copy[i] = original[i].clone();
-        }
-        return copy;
-    }
-
-    private void setRectangleData(int color, Rectangle rectangle) {
-        if (rectangle != null) {
-            rectangle.setFill(getFillColor(color));
-            rectangle.setArcHeight(5);
-            rectangle.setArcWidth(5);
-            rectangle.setStroke(Color.GRAY);
-            rectangle.setStrokeWidth(0.5);
-        }
+        gameRenderer.refreshGameBackground(board);
     }
 
     private boolean moveDown(MoveEvent event) {
@@ -488,7 +330,7 @@ public class GuiController implements Initializable {
             updateStatsFromGameController();
 
             if (downData.getClearRow() != null && downData.getClearRow().getLinesRemoved() > 0) {
-                refreshGameBackground(downData.getClearRow().getNewMatrix());
+                gameRenderer.refreshGameBackground(downData.getClearRow().getNewMatrix());
 
                 if (groupNotification != null) {
                     try {
@@ -548,34 +390,20 @@ public class GuiController implements Initializable {
     }
 
     private void updateStats(Score score) {
-        if (levelLabel != null) {
-            levelLabel.setText(String.valueOf(score.getLevel()));
+        gameRenderer.updateStats(score);
+        updateGameSpeed(score.getLevel());
+    }
 
-            // Update game speed when level changes
-
-            if (timeLine != null) {
-                timeLine.stop();
-                long newDropSpeed = dropSpeed(); // Get the new speed
-                timeLine = new Timeline(new KeyFrame(
-                        Duration.millis(newDropSpeed),
-                        event -> moveDown(new MoveEvent(EventType.DOWN, EventSource.THREAD))
-                ));
-                timeLine.setCycleCount(Timeline.INDEFINITE);
-                timeLine.play();
-            }
-        }
-        if (linesLabel != null) {
-            linesLabel.setText(String.valueOf(score.getTotalLinesCleared()));
-        }
-        if (comboLabel != null) {
-            comboLabel.setText("x" + score.getComboCount());
-            if (score.getComboCount() > 1) {
-                comboLabel.getStyleClass().removeAll("combo-value", "combo-active");
-                comboLabel.getStyleClass().add("combo-active");
-            } else {
-                comboLabel.getStyleClass().removeAll("combo-value", "combo-active");
-                comboLabel.getStyleClass().add("combo-value");
-            }
+    private void updateGameSpeed(int level) {
+        if (timeLine != null) {
+            timeLine.stop();
+            long newDropSpeed = getSpeedForLevel(level);
+            timeLine = new Timeline(new KeyFrame(
+                    Duration.millis(newDropSpeed),
+                    event -> moveDown(new MoveEvent(EventType.DOWN, EventSource.THREAD))
+            ));
+            timeLine.setCycleCount(Timeline.INDEFINITE);
+            timeLine.play();
         }
     }
 
@@ -667,7 +495,7 @@ public class GuiController implements Initializable {
         }
 
         // Clear hold preview on game over
-        updateHoldBrickPreview(null);
+        gameRenderer.clearHoldPreview();
 
         // Show game over panel
         if (gameOverContainer != null && gameOverPanel != null) {
@@ -749,7 +577,7 @@ public class GuiController implements Initializable {
         }
 
         // Clear hold preview when starting new game
-        updateHoldBrickPreview(null);
+        gameRenderer.clearHoldPreview();
 
         // Start new timer
         startTimer();
@@ -774,26 +602,25 @@ public class GuiController implements Initializable {
 
     private long getSpeedForLevel(int level) {
         return switch (level) {
-            case 1 -> 1500;  // 1.5 seconds
-            case 2 -> 1400;  // 1.4 seconds
-            case 3 -> 1300;  // 1.3 seconds
-            case 4 -> 1200;  // 1.2 seconds
-            case 5 -> 1100;  // 1.1 seconds
-            case 6 -> 1000;  // 1.0 seconds
-            case 7 -> 950;   // 0.95 seconds
-            case 8 -> 900;   // 0.9 seconds
-            case 9 -> 850;   // 0.85 seconds
-            case 10 -> 800;  // 0.8 seconds
-            case 11 -> 750;  // 0.75 seconds
-            case 12 -> 700;  // 0.7 seconds
-            case 13 -> 650;  // 0.65 seconds
-            case 14 -> 600;  // 0.6 seconds
-            case 15 -> 550;  // 0.55 seconds
-            default -> Math.max(500, 550 - (level - 15) * 10);
+            case 1 -> 1500;  // 1.5s
+            case 2 -> 1200;  // 1.2s
+            case 3 -> 900;   // 0.9s
+            case 4 -> 600;   // 0.6s
+            case 5 -> 400;   // 0.4s
+            case 6 -> 300;   // 0.3s
+            case 7 -> 220;   // 0.22s
+            case 8 -> 180;   // 0.18s
+            case 9 -> 150;   // 0.15s
+            case 10 -> 120;  // 0.12s
+            case 11 -> 100;  // 0.1s
+            case 12 -> 90;   // 0.09s
+            case 13 -> 80;   // 0.08s
+            case 14 -> 70;   // 0.07s
+            case 15 -> 60;   // 0.06s
+            default -> Math.max(30, 60 - (level - 15) * 3);
         };
     }
 
-    // Update pauseGame() method:
     public void pauseGame() {
         isPause.set(!isPause.get());
         if (isPause.get()) {
@@ -801,12 +628,12 @@ public class GuiController implements Initializable {
                 timeLine.stop();
             }
             if (gameTimer != null) {
-                gameTimer.pause(); // This is correct
+                gameTimer.pause();
             }
         } else if (!isPause.get() && timeLine != null && !isGameOver.get()) {
             timeLine.play();
             if (gameTimer != null) {
-                gameTimer.resume(); // This is correct
+                gameTimer.resume();
             }
         }
         if (gamePanel != null) {
