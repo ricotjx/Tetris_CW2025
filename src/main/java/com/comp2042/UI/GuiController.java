@@ -31,6 +31,8 @@ import javafx.scene.text.Font;
 import javafx.util.Duration;
 import java.net.URL;
 import java.util.ResourceBundle;
+import javafx.application.Platform;
+import javafx.util.Callback;
 
 public class GuiController implements Initializable {
 
@@ -78,10 +80,7 @@ public class GuiController implements Initializable {
     private InputEventListener eventListener;
     private Rectangle[][] nextBrickRectangles;
     private Timeline timeLine;
-    private Timeline timerTimeLine;
-    private long startTime;
-    private long elapsedTime;
-    private boolean isTimerRunning = false;
+    private GameTimer gameTimer;
 
     private final BooleanProperty isPause = new SimpleBooleanProperty(false);
     private final BooleanProperty isGameOver = new SimpleBooleanProperty(false);
@@ -137,6 +136,18 @@ public class GuiController implements Initializable {
 
         // Show home page when application starts
         showHomePage();
+
+        // Initialize timer
+        gameTimer = new GameTimer();
+        gameTimer.setOnTickCallback(param -> {
+            String formattedTime = gameTimer.getFormattedTime();
+            Platform.runLater(() -> {
+                if (timerLabel != null) {
+                    timerLabel.setText(formattedTime);
+                }
+            });
+            return formattedTime;
+        });
     }
 
     private void setupHomePageActions() {
@@ -570,60 +581,45 @@ public class GuiController implements Initializable {
 
     // Timer methods
     private void startTimer() {
-        if (timerTimeLine != null) {
-            timerTimeLine.stop();
+        if (gameTimer != null) {
+            gameTimer.start();
         }
-
-        startTime = System.currentTimeMillis();
-        isTimerRunning = true;
-
-        timerTimeLine = new Timeline(new KeyFrame(
-                Duration.millis(100),
-                event -> updateTimerDisplay()
-        ));
-        timerTimeLine.setCycleCount(Timeline.INDEFINITE);
-        timerTimeLine.play();
     }
 
     private void stopTimer() {
-        if (timerTimeLine != null) {
-            timerTimeLine.stop();
-            timerTimeLine = null;
+        if (gameTimer != null) {
+            gameTimer.stop();
         }
-        isTimerRunning = false;
     }
 
     private void resetTimer() {
-        stopTimer();
-        elapsedTime = 0;
-        if (timerLabel != null) {
-            timerLabel.setText("00:00");
-        }
-    }
-
-    private void updateTimerDisplay() {
-        if (isTimerRunning) {
-            elapsedTime = System.currentTimeMillis() - startTime;
-            long seconds = (elapsedTime / 1000) % 60;
-            long minutes = (elapsedTime / (1000 * 60)) % 60;
-
-            String timeString = String.format("%02d:%02d", minutes, seconds);
+        if (gameTimer != null) {
+            gameTimer.reset();
             if (timerLabel != null) {
-                timerLabel.setText(timeString);
+                timerLabel.setText("00:00");
             }
         }
     }
 
     public String getFormattedTime() {
-        long seconds = (elapsedTime / 1000) % 60;
-        long minutes = (elapsedTime / (1000 * 60)) % 60;
-        long hours = (elapsedTime / (1000 * 60 * 60)) % 24;
-
-        if (hours > 0) {
-            return String.format("%02d:%02d:%02d", hours, minutes, seconds);
-        } else {
-            return String.format("%02d:%02d", minutes, seconds);
+        if (gameTimer != null) {
+            return gameTimer.getFormattedTime();
         }
+        return "00:00";
+    }
+
+    public long getElapsedTime() {
+        if (gameTimer != null) {
+            return gameTimer.getElapsedTime();
+        }
+        return 0;
+    }
+
+    public boolean isTimerRunning() {
+        if (gameTimer != null) {
+            return gameTimer.isRunning();
+        }
+        return false;
     }
 
     public void showSpecialClearMessage(String message, int durationMs) {
@@ -797,27 +793,20 @@ public class GuiController implements Initializable {
         };
     }
 
+    // Update pauseGame() method:
     public void pauseGame() {
         isPause.set(!isPause.get());
         if (isPause.get()) {
             if (timeLine != null) {
                 timeLine.stop();
             }
-            stopTimer();
+            if (gameTimer != null) {
+                gameTimer.pause(); // This is correct
+            }
         } else if (!isPause.get() && timeLine != null && !isGameOver.get()) {
             timeLine.play();
-            // RESUME timer instead of starting new one
-            if (!isTimerRunning) {
-                // Resume from current elapsed time
-                startTime = System.currentTimeMillis() - elapsedTime;
-                isTimerRunning = true;
-
-                timerTimeLine = new Timeline(new KeyFrame(
-                        Duration.millis(100),
-                        event -> updateTimerDisplay()
-                ));
-                timerTimeLine.setCycleCount(Timeline.INDEFINITE);
-                timerTimeLine.play();
+            if (gameTimer != null) {
+                gameTimer.resume(); // This is correct
             }
         }
         if (gamePanel != null) {
