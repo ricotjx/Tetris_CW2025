@@ -138,19 +138,32 @@ public class GameController implements InputEventListener {
             return;
         }
 
+        // Reset hardDropDistance
         hardDropDistance = 0;
+
+        // Count how many rows we can drop
         while (board.moveBrickDown()) {
             hardDropDistance++;
         }
 
+        // Merge the brick and process the result
         board.mergeBrickToBackground();
         ClearRow clearRow = board.clearRows();
+
+        // Add hard drop points
+        if (hardDropDistance > 0) {
+            score.addHardDropScore(hardDropDistance);
+            hardDropDistance = 0;   // Reset after adding points
+        }
+
+        // If hard drop clears line(s), use advanced scoring
         if (clearRow.getLinesRemoved() > 0) {
             handleAdvancedScoring(clearRow.getLinesRemoved());
         } else {
             score.piecePlacedWithoutClear();
         }
 
+        // If perfect clear, add perfect clear score
         if (isPerfectClear()) {
             score.addPerfectClear();
         }
@@ -162,6 +175,9 @@ public class GameController implements InputEventListener {
         }
 
         viewGuiController.refreshGameBackground(board.getBoardMatrix());
+
+        // Reset hardDropDistance after use
+        hardDropDistance = 0;
     }
 
     private void handleAdvancedScoring(int linesCleared) {

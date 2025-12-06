@@ -121,9 +121,9 @@
                     <Label text="Space : Hard Drop" styleClass="helpInfo"/>
                 </VBox>
                 <VBox spacing="2">
+                    <Label text="Esc : Pause" styleClass="helpInfo"/>
                     <Label text="C : Hold Brick" styleClass="helpInfo"/>
                     <Label text="N : New Game" styleClass="helpInfo"/>
-                    <Label text="Esc : Pause" styleClass="helpInfo"/>
                     <Label text="H : Main Menu" styleClass="helpInfo"/>
                 </VBox>
             </HBox>
