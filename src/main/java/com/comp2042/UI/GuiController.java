@@ -8,7 +8,6 @@ import com.comp2042.model.events.MoveEvent;
 import com.comp2042.model.events.EventSource;
 import com.comp2042.model.events.EventType;
 import com.comp2042.model.events.InputEventListener;
-import com.comp2042.UI.GameOverPanel;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.property.IntegerProperty;
@@ -26,7 +25,6 @@ import javafx.util.Duration;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.application.Platform;
-import javafx.util.Callback;
 
 public class GuiController implements Initializable {
 
