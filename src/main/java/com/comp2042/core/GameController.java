@@ -19,6 +19,9 @@ public class GameController implements InputEventListener {
     private boolean gameEnded = false;
     private boolean is40LinesMode = false;
     private int linesClearedInMode = 0;
+    private boolean isTimeLimitMode = false;
+    private long gameStartTime = 0;
+    private static final long TIME_LIMIT_MS = 120_000;  // 2 minutes = 120,000 ms
 
     public GameController(GuiController c) {
         System.out.println("=== GAME CONTROLLER CONSTRUCTOR ===");
@@ -38,12 +41,21 @@ public class GameController implements InputEventListener {
         this.gameEnded = false;
         this.is40LinesMode = false;
         this.linesClearedInMode = 0;
+        this.isTimeLimitMode = false;
+        this.gameStartTime = 0;
     }
 
     @Override
     public DownData onDownEvent(MoveEvent event) {
         // Don't process game events if game hasn't started
         if (!gameStarted || gameEnded) {
+            return null;
+        }
+
+        // Check time limit if in time limit mode
+        if (isTimeLimitMode && isTimeLimitReached()) {
+            System.out.println("TIME LIMIT REACHED!");
+            onGameOver();
             return null;
         }
 
@@ -66,19 +78,6 @@ public class GameController implements InputEventListener {
             clearRow = board.clearRows();
             if (clearRow.getLinesRemoved() > 0) {
                 handleAdvancedScoring(clearRow.getLinesRemoved());
-
-                // Track lines for 40 lines mode
-                if (is40LinesMode) {
-                    linesClearedInMode += clearRow.getLinesRemoved();
-                    System.out.println("40 Lines mode: " + linesClearedInMode + "/40 lines cleared");
-
-                    // Check if 40 lines reached
-                    if (linesClearedInMode >= 40) {
-                        System.out.println("40 LINES COMPLETED!");
-                        onGameOver();
-                        return null;
-                    }
-                }
             } else {
                 score.piecePlacedWithoutClear();
             }
@@ -132,6 +131,13 @@ public class GameController implements InputEventListener {
     public void hardDrop() {
         if (!gameStarted || gameEnded) return;
 
+        // Check time limit if in time limit mode
+        if (isTimeLimitMode && isTimeLimitReached()) {
+            System.out.println("TIME LIMIT REACHED (hard drop)!");
+            onGameOver();
+            return;
+        }
+
         hardDropDistance = 0;
         while (board.moveBrickDown()) {
             hardDropDistance++;
@@ -168,11 +174,11 @@ public class GameController implements InputEventListener {
         // Track lines for 40 lines mode
         if (is40LinesMode) {
             linesClearedInMode += linesCleared;
-            System.out.println("📊 40 Lines mode progress: " + linesClearedInMode + "/40 lines cleared");
+            System.out.println("40 Lines mode progress: " + linesClearedInMode + "/40 lines cleared");
 
             // Check if 40 lines reached
             if (linesClearedInMode >= 40) {
-                System.out.println("🎉🎉🎉 40 LINES COMPLETED! Calling onGameOver()...");
+                System.out.println("40 LINES COMPLETED! Calling onGameOver()...");
                 onGameOver();
             }
         }
@@ -218,14 +224,14 @@ public class GameController implements InputEventListener {
         gameStarted = true;
         gameEnded = false;
 
+        // Record start time for time limit mode
+        if (isTimeLimitMode) {
+            gameStartTime = System.currentTimeMillis();
+            System.out.println("Time limit mode started at: " + gameStartTime);
+        }
+
         // Refresh the view
         viewGuiController.refreshGameBackground(board.getBoardMatrix());
-    }
-
-    private boolean boardHasBrick() {
-        // Check if there's a current brick in the board
-        // You might need to add a method to Board interface
-        return getViewData().getBrickData() != null;
     }
 
     public Score getScore() {
@@ -266,5 +272,23 @@ public class GameController implements InputEventListener {
     // Get current mode
     public boolean is40LinesMode() {
         return is40LinesMode;
+    }
+
+    public void setTimeLimitMode(boolean enabled) {
+        this.isTimeLimitMode = enabled;
+        this.gameStartTime = 0;
+        System.out.println("Time Limit mode set to: " + enabled);
+    }
+
+    public boolean isTimeLimitMode() {
+        return isTimeLimitMode;
+    }
+
+    // Check time limit
+    private boolean isTimeLimitReached() {
+        if (!isTimeLimitMode || gameStartTime == 0) return false;
+
+        long elapsedTime = System.currentTimeMillis() - gameStartTime;
+        return elapsedTime >= TIME_LIMIT_MS;
     }
 }
