@@ -1,3 +1,6 @@
+// Handles keyboard input for the Tetris game
+// Translates key presses into game actions and system commands
+
 package com.comp2042.UI;
 
 import com.comp2042.core.GameController;
@@ -13,14 +16,23 @@ public class InputHandler {
     private InputEventListener eventListener;
     private GuiController guiController;
 
+    // Constructs an InputHandler with reference to the GUI controller
+    // param guiController: the GUI controller for updating the view
     public InputHandler(GuiController guiController) {
         this.guiController = guiController;
     }
 
+    // Sets the event listener for game actions
     public void setEventListener(InputEventListener eventListener) {
         this.eventListener = eventListener;
     }
 
+    // Main method for handling keyboard input
+    // Routes key presses to appropriate handlers based on game state
+    // param keyEvent: the key event to process
+    // param isHomeScreen: true if home screen is currently displayed
+    // param isGameOver: true if game is over
+    // param isPause: true if game is paused
     public void handleKeyPressed(KeyEvent keyEvent, boolean isHomeScreen, boolean isGameOver, boolean isPause) {
         if (eventListener == null) return;
 
@@ -38,6 +50,9 @@ public class InputHandler {
         handleSystemInput(code);
     }
 
+    // Handles game-specific input during active gameplay
+    // param code: the key code that was pressed
+    // param keyEvent: the original key event
     private void handleGameInput(KeyCode code, KeyEvent keyEvent) {
         switch (code) {
             case LEFT:  // Move brick left
@@ -77,6 +92,8 @@ public class InputHandler {
         }
     }
 
+    // Handles system-level input (global controls)
+    // param code: the key code that was pressed
     private void handleSystemInput(KeyCode code) {
         switch (code) {
             case N: // New game

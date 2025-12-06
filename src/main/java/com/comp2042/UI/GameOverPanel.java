@@ -1,3 +1,5 @@
+// Displays the game over screen with final game statistics
+// Displays the final score, game statistics and provides options to replay or return to the main menu
 package com.comp2042.UI;
 
 import javafx.geometry.Pos;
@@ -16,6 +18,8 @@ public class GameOverPanel extends VBox {
     private final Label linesLabel;
     private final Label timeLabel;
 
+    // Constructs a GameOverPanel with default styling and layout
+    // Initializes all UI components and sets up the visual design
     public GameOverPanel() {
         setAlignment(Pos.CENTER);
         setSpacing(30);
@@ -95,20 +99,30 @@ public class GameOverPanel extends VBox {
         layout();
     }
 
+    // Sets the final score displayed on the game over screen
+    // param score: the final score to display
     public void setFinalScore(int score) {
         scoreLabel.setText("Final Score: " + score);
     }
 
+    // Sets the game stats displayed on the game over screen
+    // param level: the final level reached
+    // param lines: the total number of lines cleared
+    // param time: the total play time formatted as a string
     public void setGameStats(int level, int lines, String time) {
         levelLabel.setText(String.valueOf(level));
         linesLabel.setText(String.valueOf(lines));
         timeLabel.setText(time);
     }
 
+    // Gets the restart button
+    // Returns the button used to restart the game
     public Button getRestartButton() {
         return restartButton;
     }
 
+    // Gets the home button
+    // Returns the button used to return to the main menu
     public Button getHomeButton() {
         return homeButton;
     }

@@ -1,3 +1,6 @@
+// A game timer that tracks elapsed time with start, pause, resume and stop functionality
+// Provides formatted time display and callback notifications on each timer tick
+
 package com.comp2042.UI;
 
 import javafx.animation.KeyFrame;
@@ -14,11 +17,16 @@ public class GameTimer {
     private boolean isRunning = false;
     private ObjectProperty<Callback<Void, String>> onTickCallback = new SimpleObjectProperty<>();
 
+    // Constructs a new GameTimer
+    // Timer must be started explicitly using the start() method
     public GameTimer() {
         // Initialize empty
     }
 
+    // Starts the timer
+    // Begins tracking elapsed time from the current moment or resumes from previously elapsed time
     public void start() {
+        // If already running, this method does nothing
         if (isRunning) return;
 
         startTime = System.currentTimeMillis() - elapsedTime;

@@ -1,3 +1,6 @@
+// Manages the game state transitions and UI states
+// Handles pausing, game over and home screen states
+
 package com.comp2042.UI;
 
 import com.comp2042.core.GameController;

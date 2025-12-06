@@ -1,3 +1,6 @@
+// The main menu/ home screen panel for the Tetris game
+// Allows players to select different game modes
+
 package com.comp2042.UI;
 
 import javafx.geometry.Pos;
@@ -13,6 +16,8 @@ public class HomePanel extends VBox {
     private final Label titleLabel;
     private final Label subtitleLabel;
 
+    // Constructs the home panel with game mode selection buttons
+    // Initializes all UI components with styling and layout
     public HomePanel() {
         setAlignment(Pos.CENTER);
         setSpacing(40);
@@ -68,6 +73,11 @@ public class HomePanel extends VBox {
         layout();
     }
 
+    // Creates a game mode selection button with title and description
+    // param title: the main button title
+    // param description: the descriptive text below the title
+    // param buttonStyle: the CSS style for the button background
+    // Returns a fully styled button with hover effects
     private Button createModeButton(String title, String description, String buttonStyle) {
         VBox buttonContent = new VBox(5);
         buttonContent.setAlignment(Pos.CENTER);
@@ -122,24 +132,34 @@ public class HomePanel extends VBox {
         return button;
     }
 
+    // Gets the zen mode button
+    // Returns the button for selecting zen mode
     public Button getZenModeButton() {
         return zenModeButton;
     }
 
+    // Gets the time limit mode button
+    // Returns the button for selecting time limit mode
     public Button getTimeLimitModeButton() {
         return timeLimitModeButton;
     }
 
+    // Gets the 40 lines mode button
+    // Returns the button for selecting 40 lines mode
     public Button getLinesModeButton() {
         return linesModeButton;
     }
 
+    // Shows the home panel
+    // Makes the panel visible and brings it to the front
     public void showPanel() {
         setVisible(true);
         setManaged(true);
         toFront();
     }
 
+    // Hides the home panel
+    // Makes the panel invisible and sends it to the back
     public void hidePanel() {
         setVisible(false);
         setManaged(false);

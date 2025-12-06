@@ -1,3 +1,7 @@
+// Main controller class that manages the Tetris game flow
+// Handles user input, game logic, scoring and different game modes
+// Acts as the bridge between the game model and the user interface
+
 package com.comp2042.core;
 
 import com.comp2042.model.ClearRow;
@@ -23,6 +27,7 @@ public class GameController implements InputEventListener {
     private long gameStartTime = 0;
     private static final long TIME_LIMIT_MS = 120_000;  // 2 minutes = 120,000 ms
 
+    // Constructs a GameController with the specified GUI controller
     public GameController(GuiController c) {
         System.out.println("=== GAME CONTROLLER CONSTRUCTOR ===");
         viewGuiController = c;
@@ -32,6 +37,8 @@ public class GameController implements InputEventListener {
         viewGuiController.setOnRestartGame(this::createNewGame);
     }
 
+    // Initializes all game state variables to their default values
+    // Called when starting a new game
     private void initializeGameState() {
         // Reset without creating brick
         score.reset();
@@ -45,6 +52,9 @@ public class GameController implements InputEventListener {
         this.gameStartTime = 0;
     }
 
+    // Handles down movement events
+    // Returns DownData containing cleared rows and view data or null if game ended
+    // param event: the move event containing event source information
     @Override
     public DownData onDownEvent(MoveEvent event) {
         // Don't process game events if game hasn't started
@@ -97,6 +107,9 @@ public class GameController implements InputEventListener {
         return new DownData(clearRow, board.getViewData());
     }
 
+    // Handles left movement events
+    // Returns updated ViewData after the move
+    // param event: the move event
     @Override
     public ViewData onLeftEvent(MoveEvent event) {
         if (!gameStarted || gameEnded) return board.getViewData();
@@ -104,6 +117,9 @@ public class GameController implements InputEventListener {
         return board.getViewData();
     }
 
+    // Handles right movement events
+    // Returns updated ViewData after the move
+    // param event: the move event
     @Override
     public ViewData onRightEvent(MoveEvent event) {
         if (!gameStarted || gameEnded) return board.getViewData();
@@ -111,6 +127,9 @@ public class GameController implements InputEventListener {
         return board.getViewData();
     }
 
+    // Handles rotation events
+    // Returns updated ViewData after the rotation
+    // param event: the move event
     @Override
     public ViewData onRotateEvent(MoveEvent event) {
         if (!gameStarted || gameEnded) return board.getViewData();
@@ -118,6 +137,9 @@ public class GameController implements InputEventListener {
         return board.getViewData();
     }
 
+    // Handles hold brick events
+    // Returns updated ViewData after holding brick
+    // param event: the move event
     @Override
     public ViewData onHoldEvent(MoveEvent event) {
         if (!gameStarted || gameEnded) return board.getViewData();
@@ -128,6 +150,8 @@ public class GameController implements InputEventListener {
         return null;
     }
 
+    // Performs a hard drop operation (instant brick placement)
+    // Moves brick to lowest possible position and processes the result
     public void hardDrop() {
         if (!gameStarted || gameEnded) return;
 
@@ -180,6 +204,8 @@ public class GameController implements InputEventListener {
         hardDropDistance = 0;
     }
 
+    // Handles advanced scoring calculations for line clears
+    // param linesCleared: number of lines cleared (1-4)
     private void handleAdvancedScoring(int linesCleared) {
         if (linesCleared == 4) {
             score.addTetrisScore();
@@ -200,6 +226,8 @@ public class GameController implements InputEventListener {
         }
     }
 
+    // Checks if the board is completely empty (perfect clear)
+    // Returns true if board has no blocks, false otherwise
     private boolean isPerfectClear() {
         int[][] boardMatrix = board.getBoardMatrix();
         for (int y = 0; y < boardMatrix.length; y++) {
@@ -212,10 +240,14 @@ public class GameController implements InputEventListener {
         return true;
     }
 
+    // Gets the current view data for rendering
+    // Returns ViewData containing current game state
     public ViewData getViewData() {
         return board.getViewData();
     }
 
+    // Resets the game to initial state
+    // Stops current game and clears all game data
     public void reset() {
         // Stop any ongoing game logic
         stopGame();
@@ -233,6 +265,8 @@ public class GameController implements InputEventListener {
         this.gameEnded = false;
     }
 
+    // Starts a new game
+    // Resets board, score and begins game with first brick
     @Override
     public void createNewGame() {
         board.newGame();
@@ -250,14 +284,20 @@ public class GameController implements InputEventListener {
         viewGuiController.refreshGameBackground(board.getBoardMatrix());
     }
 
+    // Gets the score object
+    // Returns the Score object for this game
     public Score getScore() {
         return score;
     }
 
+    // Gets the current board matrix
+    // Returns 2D array representing the current game board
     public int[][] getCurrentBoard() {
         return board.getBoardMatrix();
     }
 
+    // Handles game over condition
+    // Stops the game and displays final score
     public void onGameOver() {
         gameEnded = true;
         gameStarted = false;
@@ -265,42 +305,55 @@ public class GameController implements InputEventListener {
         viewGuiController.gameOver(finalScore);
     }
 
+    // Checks if the game has started
+    // Returns true if game is in progress, false otherwise
     public boolean isGameStarted() {
         return gameStarted;
     }
 
+    // Checks if the game has ended
+    // Returns true if game has ended, false otherwise
     public boolean isGameEnded() {
         return gameEnded;
     }
 
+    // Stops the game
+    // Used for pausing or force stopping the game
     public void stopGame() {
         gameStarted = false;
         gameEnded = true;
     }
 
     // Set 40 lines mode
+    // param enabled: true to enable 40 lines mode, false to disable
     public void set40LinesMode(boolean enabled) {
         this.is40LinesMode = enabled;
         this.linesClearedInMode = 0;
         System.out.println("40 Lines mode set to: " + enabled);
     }
 
-    // Get current mode
+    // Checks if 40 lines mode is enabled
+    // Returns true if 40 lines mode is active, false otherwise
     public boolean is40LinesMode() {
         return is40LinesMode;
     }
 
+    // Set time limit mode
+    // param enabled: true to enable time limit mode, false to disable
     public void setTimeLimitMode(boolean enabled) {
         this.isTimeLimitMode = enabled;
         this.gameStartTime = 0;
         System.out.println("Time Limit mode set to: " + enabled);
     }
 
+    // Checks if time limit mode is enabled
+    // Returns true if time limit mode is active, false otherwise
     public boolean isTimeLimitMode() {
         return isTimeLimitMode;
     }
 
-    // Check time limit
+    // Checks if the time limit has been reached in time limit mode
+    // Returns true if time limit (2 mins) has been reached, false otherwise
     private boolean isTimeLimitReached() {
         if (!isTimeLimitMode || gameStartTime == 0) return false;
 

@@ -1,3 +1,7 @@
+// Manages all the visual elements on the screen
+// Connects the game logic with the visual display
+// Handles switching between different screens (home, game, game over)
+
 package com.comp2042.UI;
 
 import com.comp2042.core.GameController;

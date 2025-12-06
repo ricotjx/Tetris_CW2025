@@ -1,3 +1,6 @@
+// Implementation of the Board interface that manages the game state
+// Incldes the current falling brick, hold functionality and game board matrix
+
 package com.comp2042.core;
 
 import com.comp2042.logic.bricks.Brick;
@@ -23,10 +26,13 @@ public class SimpleBoard implements Board {
     private boolean holdUsedThisTurn = false;
     private Brick currentBrick;
 
+    // Constructs a SimpleBoard with specified dimensions
+    // param width: the width of the game board in cells
+    // param height: the height of the game board in cells
     public SimpleBoard(int width, int height) {
         this.width = width;
         this.height = height;
-        currentGameMatrix = new int[height][width];  // Note: [height][width] for row-major
+        currentGameMatrix = new int[height][width];
         brickGenerator = new RandomBrickGenerator();
         brickRotator = new BrickRotator();
 
@@ -38,6 +44,8 @@ public class SimpleBoard implements Board {
         }
     }
 
+    // Moves the current brick down by one unit
+    // Returns true if move was successful, false if blocked
     @Override
     public boolean moveBrickDown() {
         if (currentBrick == null) return false;
@@ -59,6 +67,8 @@ public class SimpleBoard implements Board {
         return false;
     }
 
+    // Moves the current brick left by one unit
+    // Returns true if move was successful, false if blocked
     @Override
     public boolean moveBrickLeft() {
         if (currentBrick == null) return false;
@@ -80,6 +90,8 @@ public class SimpleBoard implements Board {
         return false;
     }
 
+    // Moves the current brick right by one unit
+    // Returns true if move was successful, false if blocked
     @Override
     public boolean moveBrickRight() {
         if (currentBrick == null) return false;
@@ -101,6 +113,8 @@ public class SimpleBoard implements Board {
         return false;
     }
 
+    // Rotates the current brick counterclockwise
+    // Returns true if rotation was successful, false if blocked
     @Override
     public boolean rotateLeftBrick() {
         if (currentBrick == null) return false;
@@ -120,6 +134,8 @@ public class SimpleBoard implements Board {
         return false;
     }
 
+    // Creates a new brick at the top of the board
+    // Returns true if game over (collision at spawn), false otherwise
     @Override
     public boolean createNewBrick() {
         // Reset hold flag for new piece
@@ -143,11 +159,15 @@ public class SimpleBoard implements Board {
         return collision; // true = game over
     }
 
+    // Gets the current board matrix
+    // Returns 2D array representing the game board
     @Override
     public int[][] getBoardMatrix() {
         return currentGameMatrix;
     }
 
+    // Gets view data for rendering
+    // Returns ViewData containing current brick, next brick and hold brick
     @Override
     public ViewData getViewData() {
         int[][] holdMatrix = holdBrick != null ? holdBrick.getShapeMatrix().get(0) : null;
@@ -162,10 +182,15 @@ public class SimpleBoard implements Board {
         );
     }
 
+    // Gets the matrix representation of the held brick
+    // Returns 2D array of the held brick shape or null if no brick is held
     public int[][] getHoldBrickMatrix() {
         return holdBrick != null ? holdBrick.getShapeMatrix().get(0) : null;
     }
 
+    // Holds the current brick for later use
+    // Swaps current brick with held brick
+    // Can only be used once per turn
     @Override
     public void holdCurrentBrick() {
         if (holdUsedThisTurn || currentBrick == null) {
@@ -192,6 +217,7 @@ public class SimpleBoard implements Board {
         holdUsedThisTurn = true;
     }
 
+    // Performs a hard drop (instant placement) of the current brick
     @Override
     public void hardDrop() {
         if (currentBrick == null) return;
@@ -205,6 +231,8 @@ public class SimpleBoard implements Board {
         createNewBrick();
     }
 
+    // Merges the current brick into the background board
+    // Called when a brick reaches its final position
     @Override
     public void mergeBrickToBackground() {
         if (currentBrick == null) return;
@@ -217,6 +245,8 @@ public class SimpleBoard implements Board {
         );
     }
 
+    // Clears completed rows from the board
+    // Returns ClearRow object containing cleared rows data
     @Override
     public ClearRow clearRows() {
         ClearRow clearRow = MatrixOperations.checkRemoving(currentGameMatrix);
@@ -224,17 +254,21 @@ public class SimpleBoard implements Board {
         return clearRow;
     }
 
+    // Gets the score object
+    // Returns Score object for tracking points
     @Override
     public Score getScore() {
         return null;
     }
 
+    // Starts a new game
     @Override
     public void newGame() {
         reset();
         createNewBrick();
     }
 
+    // Resets the board to initial state
     @Override
     public void reset() {
         System.out.println("=== SIMPLEBOARD RESET ===");

@@ -1,3 +1,7 @@
+// Renders the Tetris game visuals including the main game board
+// Includes next brick preview, hold brick preview and game statistics
+// Manages the graphical representation of all game elements
+
 package com.comp2042.UI;
 
 import com.comp2042.core.Score;
@@ -26,6 +30,16 @@ public class GameRenderer {
     private Rectangle[][] nextBrickRectangles;
     private int[][] currentBoardMatrix;
 
+    // Constructs a GameRenderer with references to all UI components.
+    // param gamePanel: the main game board GridPane
+    // param brickPanel: the next brick preview GridPane
+    // param holdPanel: the hold brick preview GridPane
+    // param groupNotification: the notification display group
+    // param scoreLabel: the label displaying the current score
+    // param levelLabel: the label displaying the current level
+    // param linesLabel: the label displaying total lines cleared
+    // param comboLabel: the label displaying the current combo
+    // param timerLabel: the label displaying the game timer
     public GameRenderer(GridPane gamePanel, GridPane brickPanel, GridPane holdPanel,
                         Group groupNotification, Label scoreLabel, Label levelLabel,
                         Label linesLabel, Label comboLabel, Label timerLabel) {

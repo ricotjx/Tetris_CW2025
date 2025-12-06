@@ -1,3 +1,6 @@
+// Manages the scoring system for the Tetris game
+// Handles points, levels, combos and special bonuses
+
 package com.comp2042.core;
 
 import javafx.beans.property.IntegerProperty;
@@ -12,14 +15,19 @@ public final class Score {
     private boolean lastWasTetris = false;
     private int consecutiveTetrisCount = 0;
 
+    // Gets the score property for JavaFX binding
+    // Returns the score property
     public IntegerProperty scoreProperty() {
         return score;
     }
 
+    // Adds points to the current score
+    // param i: the number of points to add
     public void add(int i) {
         score.setValue(score.getValue() + i);
     }
 
+    // Resets all scoring values to their initial state
     public void reset() {
         score.setValue(0);
         level = 1;
@@ -29,27 +37,38 @@ public final class Score {
         consecutiveTetrisCount = 0;
     }
 
+    // Gets the current game level
+    // Returns the current level
     public int getLevel() {
         return level;
     }
 
+    // Gets the total number of lines cleared
+    // Returns total lines cleared
     public int getTotalLinesCleared() {
         return totalLinesCleared;
     }
 
+    // Gets the current combo count
+    // Returns the combo count
     public int getComboCount() {
         return comboCount;
     }
 
+    // Gets the consecutive Tetris count
+    // Returns number of consecutive Tetris clears
     public int getConsecutiveTetrisCount() {
         return consecutiveTetrisCount;
     }
 
+    // Checks if back to back Tetris bonus is active
+    // Returns true if consecutive Tetris count is greater than 1
     public boolean isBackToBackActive() {
         return consecutiveTetrisCount > 1;
     }
 
     // Calculate score for line clears (1-4)
+    // param linesCleared: number of lines cleared (1-4)
     public void addLineClearScore(int linesCleared) {
         if (linesCleared < 1 || linesCleared > 4) {
             resetCombo();
@@ -94,6 +113,7 @@ public final class Score {
         }
     }
 
+    // Adds score for a Tetris
     public void addTetrisScore() {
         int basePoints = 800 * level;
 
@@ -119,6 +139,7 @@ public final class Score {
     }
 
     // Combo system
+    // Adds combo points based on current combo count
     private void addComboPoints() {
         if (comboCount > 0) {
             int comboPoints = 50 * level * comboCount;
@@ -128,6 +149,7 @@ public final class Score {
         comboCount++;
     }
 
+    // Resets the combo counter
     public void resetCombo() {
         if (comboCount > 1) {
             System.out.println("Combo broken! Reached x" + (comboCount - 1) + " combo");
@@ -136,6 +158,7 @@ public final class Score {
     }
 
     // Perfect clear bonus
+    // Adds bonus points for a perfect clear (empty board)
     public void addPerfectClear() {
         int perfectClearBonus = 2000 * level;
         add(perfectClearBonus);
@@ -148,6 +171,7 @@ public final class Score {
     }
 
     // Add points for hard drop (2 points per row dropped)
+    // param dropDistance: number of rows dropped
     public void addHardDropScore(int dropDistance) {
         if (dropDistance > 0) {
             int points = dropDistance * 2;
@@ -157,6 +181,7 @@ public final class Score {
     }
 
     // Add points for soft drop (1 point per row, called continuously during soft drop)
+    // param dropDistance: number of rows soft dropped
     public  void addSoftDropScore(int dropDistance) {
         if (dropDistance > 0) {
             int points = dropDistance * 1;
